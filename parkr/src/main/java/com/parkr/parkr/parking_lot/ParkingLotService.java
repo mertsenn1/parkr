@@ -94,7 +94,12 @@ public class ParkingLotService implements IParkingLotService
         {
             owner = userRepository.findById(ownerId).get();
             Address address = addressService.saveAddress(addressDto);
+            if (address == null)
+                throw new Exception();
+
             Location location = locationService.saveLocation(locationDto);
+            if (location == null)
+                throw new Exception();
 
             parkingLot = parkingLotRepository.save(convertToParkingLot(parkingLotDto, address, location, owner));
             log.info("Parking Lot is saved with id: {}", parkingLot.getId());

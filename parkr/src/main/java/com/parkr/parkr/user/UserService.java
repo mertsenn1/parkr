@@ -76,15 +76,15 @@ public class UserService implements IUserService
             user = userRepository.save(convertToUser(userDto, address));
 
             if (carDtos != null) {
+                /*
                 for (CarDto carDto : carDtos) {
                     carService.saveCar(carDto, user.getId());
                 }
-            }
-            /* 
-            Car car = carService.saveCar(carDto);
-            if (car == null) 
-                throw new Exception();
                 */
+                carDtos.forEach(carDto -> {
+                    carService.saveCar(carDto, user.getId());
+                });
+            }
             
             log.info("User {} is saved with mail: {}", userDto.getName(), userDto.getMail());
         }
@@ -125,11 +125,19 @@ public class UserService implements IUserService
         }
 
         List<CarDto> carDtos = new ArrayList<>();
+        /* 
         for (Car car : cars) {
             CarDto carDto = carService.convertToCarDto(car);
 
             carDtos.add(carDto);
         }
+        */
+
+        cars.forEach(car -> {
+            CarDto carDto = carService.convertToCarDto(car);
+            carDtos.add(carDto);
+        });
+        
         return carDtos;
     }
     
