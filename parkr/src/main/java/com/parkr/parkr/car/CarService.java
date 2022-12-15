@@ -4,6 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import com.parkr.parkr.user.User;
+import com.parkr.parkr.user.UserRepository;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +16,8 @@ import java.util.Optional;
 public class CarService implements ICarService
 {
     private final CarRepository carRepository;
+    private final UserRepository userRepository;
+
     @Override
     public CarDto getCarById(Long id)
     {
@@ -36,12 +41,15 @@ public class CarService implements ICarService
     }
 
     @Override
-    public Car saveCar(CarDto carDto)
+    public Car saveCar(CarDto carDto, Long userId)
     {
         Car car;
+        User user;
         try
         {
-            car = carRepository.save(convertToCar(carDto));
+            user = userRepository.findById(userId).get();
+
+            car = carRepository.save(convertToCar(carDto, user));
             log.info("Car is saved with id: {}", car.getId());
         }
         catch (Exception ex)
@@ -52,8 +60,9 @@ public class CarService implements ICarService
         return car;
     }
 
-    private CarDto convertToCarDto(Car car) {
+    public CarDto convertToCarDto(Car car) {
         return CarDto.builder()
+                .id(car.getId())
                 .plate(car.getPlate())
                 .carType(car.getCarType())
                 .model(car.getModel())
@@ -61,7 +70,7 @@ public class CarService implements ICarService
                 .build();
     }
 
-    private Car convertToCar(CarDto carDto) {
-        return new Car(null, carDto.getPlate(), carDto.getCarType(), carDto.getModel(), carDto.getFuelType());
+    private Car convertToCar(CarDto carDto, User user) {
+        return new Car(null, carDto.getPlate(), carDto.getCarType(), carDto.getModel(), carDto.getFuelType(), user);
     }
 }

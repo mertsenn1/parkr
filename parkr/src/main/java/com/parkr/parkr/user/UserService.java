@@ -10,7 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +26,7 @@ public class UserService implements IUserService
     @Override
     public UserDto getUserById(Long id)
     {
+        System.out.println("HERE: \n" + userRepository.findCarsOfUser(id));
         Optional<User> user = userRepository.findById(id);
 
         if (user.isEmpty()) return null;
@@ -54,24 +55,37 @@ public class UserService implements IUserService
     @Override
     public User signUp(UserDto userDto)
     {
-        AddressDto addressDto = AddressDto.builder()
+        /*
+         * AddressDto.builder()
                 .country(userDto.getCountry())
                 .city(userDto.getCity())
                 .district(userDto.getDistrict())
                 .street(userDto.getStreet())
                 .build();
-        CarDto carDto = CarDto.builder()
-                .plate(userDto.getPlate())
-                .carType(userDto.getCarType())
-                .model(userDto.getModel())
-                .fuelType(userDto.getFuelType())
-                .build();
+         */
+        AddressDto addressDto = userDto.getAddress(); 
+        List<CarDto> carDtos = userDto.getCars();
+
         User user;
         try
         {
             Address address = addressService.saveAddress(addressDto);
+            if (address == null)
+                throw new Exception();
+
+            user = userRepository.save(convertToUser(userDto, address));
+
+            if (carDtos != null) {
+                for (CarDto carDto : carDtos) {
+                    carService.saveCar(carDto, user.getId());
+                }
+            }
+            /* 
             Car car = carService.saveCar(carDto);
-            user = userRepository.save(convertToUser(userDto, address, car));
+            if (car == null) 
+                throw new Exception();
+                */
+            
             log.info("User {} is saved with mail: {}", userDto.getName(), userDto.getMail());
         }
         catch (Exception ex)
@@ -95,26 +109,34 @@ public class UserService implements IUserService
 
     private UserDto convertToUserDto(User user) {
         return UserDto.builder()
+                .id(user.getId())
                 .mail(user.getMail())
                 .name(user.getName())
                 .phone(user.getPhone())
                 .isOwner(user.getIsOwner())
-                .street(user.getAddress().getStreet())
-                .country(user.getAddress().getCountry())
-                .district(user.getAddress().getDistrict())
-                .city(user.getAddress().getCity())
-                .password(user.getPassword())
-                .plate(user.getCar().getPlate())
-                .model(user.getCar().getModel())
-                .fuelType(user.getCar().getFuelType())
-                .carType(user.getCar().getCarType())
+                .address(addressService.convertToAddressDto(user.getAddress()))
+                .cars(convertToCarDtos(userRepository.findCarsOfUser(user.getId()))) // to display cars
                 .build();
     }
 
-    private User convertToUser(UserDto userDto, Address address, Car car) {
+    private List<CarDto> convertToCarDtos(List<Car> cars) {
+        if (cars == null || cars.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<CarDto> carDtos = new ArrayList<>();
+        for (Car car : cars) {
+            CarDto carDto = carService.convertToCarDto(car);
+
+            carDtos.add(carDto);
+        }
+        return carDtos;
+    }
+    
+    private User convertToUser(UserDto userDto, Address address) {
         return new User(null, userDto.getMail(), userDto.getName(),
                 userDto.getPassword(), userDto.getPhone(),
-                userDto.getIsOwner(), address, car);
+                userDto.getIsOwner(), address);
     }
 
 }

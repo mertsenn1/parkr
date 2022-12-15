@@ -1,7 +1,9 @@
 package com.parkr.parkr.user;
 
-import com.parkr.parkr.car.CarType;
-import com.parkr.parkr.car.FuelType;
+import java.util.List;
+
+import com.parkr.parkr.address.AddressDto;
+import com.parkr.parkr.car.CarDto;
 import lombok.Builder;
 import lombok.Data;
 
@@ -9,6 +11,8 @@ import lombok.Data;
 @Builder
 public class UserDto
 {
+    private Long id;
+    
     private String mail;
 
     private String name;
@@ -19,6 +23,10 @@ public class UserDto
 
     private Boolean isOwner;
 
+    private AddressDto address;
+
+    private List<CarDto> cars;
+    /* 
     private String country;
 
     private String city;
@@ -34,4 +42,5 @@ public class UserDto
     private String model;
 
     private FuelType fuelType;
+    */
 }

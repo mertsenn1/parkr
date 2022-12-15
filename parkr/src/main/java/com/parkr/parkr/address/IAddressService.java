@@ -9,4 +9,6 @@ public interface IAddressService
     List<AddressDto> getAllAddresses();
 
     Address saveAddress(AddressDto addressDto);
+
+    AddressDto convertToAddressDto(Address address);
 }

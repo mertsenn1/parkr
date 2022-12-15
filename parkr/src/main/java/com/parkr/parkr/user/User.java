@@ -1,7 +1,7 @@
 package com.parkr.parkr.user;
 
 import com.parkr.parkr.address.Address;
-import com.parkr.parkr.car.Car;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -33,11 +33,7 @@ public class User
     @Column(name = "is_owner")
     private Boolean isOwner;
 
-    @ManyToOne
+    @OneToOne
     @JoinColumn(name = "address_id", referencedColumnName = "id")
     private Address address;
-
-    @ManyToOne
-    @JoinColumn(name = "car_id", referencedColumnName = "id")
-    private Car car;
 }

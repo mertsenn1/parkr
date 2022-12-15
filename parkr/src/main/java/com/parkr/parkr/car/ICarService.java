@@ -8,5 +8,7 @@ public interface ICarService
 
     List<CarDto> getAllCars();
 
-    Car saveCar(CarDto carDto);
+    Car saveCar(CarDto carDto, Long userId);
+
+    CarDto convertToCarDto(Car car);
 }

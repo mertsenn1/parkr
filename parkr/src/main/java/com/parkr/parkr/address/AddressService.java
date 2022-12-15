@@ -58,9 +58,10 @@ public class AddressService implements IAddressService
                 addressDto.getDistrict(), addressDto.getStreet());
     }
 
-    private AddressDto convertToAddressDto(Address address)
+    public AddressDto convertToAddressDto(Address address)
     {
         return AddressDto.builder()
+                .id(address.getId())
                 .country(address.getCountry())
                 .city(address.getCity())
                 .district(address.getDistrict())

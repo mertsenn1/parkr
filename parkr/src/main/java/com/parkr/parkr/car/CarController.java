@@ -23,6 +23,6 @@ public class CarController
 
     @PostMapping()
     public ApiResponse saveCar(@RequestBody CarDto carDto) {
-        return ApiResponse.ok(carService.saveCar(carDto));
+        return ApiResponse.ok(carService.saveCar(carDto, carDto.getUserId()));
     }
 }

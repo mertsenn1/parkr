@@ -1,4 +1,4 @@
-package com.parkr.parkr.lot;
+package com.parkr.parkr.parking_lot;
 
 import com.google.gson.JsonElement;
 import com.parkr.parkr.common.RequestBuilder;

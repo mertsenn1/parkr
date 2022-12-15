@@ -7,6 +7,8 @@ import lombok.Data;
 @Builder
 public class AddressDto
 {
+    private Long id;
+    
     private String country;
 
     private String city;
