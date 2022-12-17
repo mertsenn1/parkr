@@ -8,7 +8,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 
 @Component
-public class RequestBuilder
+public class RequestBuilderCommon
 {
     @Value("${google.api.key}")
     private String GOOGLE_PLACES_API_KEY;
