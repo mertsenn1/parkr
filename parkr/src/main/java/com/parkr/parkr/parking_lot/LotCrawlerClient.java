@@ -1,7 +1,7 @@
 package com.parkr.parkr.parking_lot;
 
 import com.google.gson.JsonElement;
-import com.parkr.parkr.common.RequestBuilder;
+import com.parkr.parkr.common.RequestBuilderCommon;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.RequestEntity;
@@ -15,11 +15,11 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 public class LotCrawlerClient
 {
-    private final RequestBuilder requestBuilder;
+    private final RequestBuilderCommon requestBuilderCommon;
 
     public JsonElement crawlNearbyLots(Double latitude, Double longitude, String language, Integer maxPrice,
                                        Integer minPrice, Boolean openNow, Integer radius, String type) {
-        RequestEntity<Void> requestEntity = requestBuilder.buildRequestForLots(latitude, longitude, language, maxPrice, minPrice, openNow, radius, type);
+        RequestEntity<Void> requestEntity = requestBuilderCommon.buildRequestForLots(latitude, longitude, language, maxPrice, minPrice, openNow, radius, type);
 
         try
         {
