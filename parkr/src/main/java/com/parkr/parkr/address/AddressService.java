@@ -52,6 +52,19 @@ public class AddressService implements IAddressService
         return address;
     }
 
+    @Override
+    public void deleteAddress(Long id){
+        Optional<Address> address = addressRepository.findById(id);
+        if (!address.isPresent()) throw new AddressNotFoundException("Address couldn't found by id: " + id);
+        try{
+            addressRepository.delete(address.get());
+            log.info("Address with id is deleted: {}", id);
+        }
+        catch (Exception ex){
+            log.info("Error occurred while deleting the address, error: {}", ex.getMessage());
+        }
+    }
+
     private Address convertToAddress(AddressDto addressDto)
     {
         return new Address(null, addressDto.getCountry(), addressDto.getCity(),

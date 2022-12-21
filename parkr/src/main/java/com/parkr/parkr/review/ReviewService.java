@@ -59,6 +59,19 @@ public class ReviewService implements IReviewService {
         return review;
     }
 
+    @Override
+    public void deleteReview(Long id){
+        Optional<ParkingLot> lotSummary = parkingLotRepository.findById(id);
+        if (!lotSummary.isPresent()) throw new ReviewNotFoundException("Review couldn't found by id: " + id);
+        try{
+            parkingLotRepository.delete(lotSummary.get());
+            log.info("Review with id is deleted: {}", id);
+        }
+        catch (Exception ex){
+            log.info("Error occurred while deleting the review, error: {}", ex.getMessage());
+        }
+    }
+
     private ReviewDto convertToReviewDto(Review review) {
         return ReviewDto.builder()
                 .id(review.getId())

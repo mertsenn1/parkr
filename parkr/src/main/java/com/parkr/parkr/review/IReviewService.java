@@ -9,4 +9,6 @@ public interface IReviewService
     List<ReviewDto> getAllReviews();
 
     Review saveReview(ReviewDto reviewDto, Long parkingLotId);
+
+    void deleteReview(Long id);
 }

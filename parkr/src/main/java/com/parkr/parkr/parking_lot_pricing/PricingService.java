@@ -59,6 +59,19 @@ public class PricingService implements IPricingService {
         return pricing;
     }
 
+    @Override
+    public void deletePricing(Long id){
+        Optional<ParkingLot> lotSummary = parkingLotRepository.findById(id);
+        if (!lotSummary.isPresent()) throw new PricingNotFoundException("Pricing couldn't found by id: " + id);
+        try{
+            parkingLotRepository.delete(lotSummary.get());
+            log.info("Pricing with id is deleted: {}", id);
+        }
+        catch (Exception ex){
+            log.info("Error occurred while deleting the pricing, error: {}", ex.getMessage());
+        }
+    }
+
     private PricingDto convertToPricingDto(Pricing pricing) {
         return PricingDto.builder()
                 .id(pricing.getId())

@@ -50,6 +50,18 @@ public class LocationService implements ILocationService {
         return location;
     }
 
+    public void deleteLocation(Long id){
+        Optional<Location> lotSummary = locationRepository.findById(id);
+        if (!lotSummary.isPresent()) throw new LocationNotFoundException("Location couldn't found by id: " + id);
+        try{
+            locationRepository.delete(lotSummary.get());
+            log.info("Location with id is deleted: {}", id);
+        }
+        catch (Exception ex){
+            log.info("Error occurred while deleting the location, error: {}", ex.getMessage());
+        }
+    } 
+
     @Override
     public LocationDto convertToLocationDto(Location location) {
         return LocationDto.builder()

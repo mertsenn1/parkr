@@ -10,5 +10,7 @@ public interface ICarService
 
     Car saveCar(CarDto carDto, Long userId);
 
+    void deleteCar(Long id);
+
     CarDto convertToCarDto(Car car);
 }

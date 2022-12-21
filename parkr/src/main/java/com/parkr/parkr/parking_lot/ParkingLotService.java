@@ -112,6 +112,19 @@ public class ParkingLotService implements IParkingLotService
         return parkingLot;
     }
 
+    @Override
+    public void deleteParkingLot(Long id){
+        Optional<ParkingLot> lotSummary = parkingLotRepository.findById(id);
+        if (!lotSummary.isPresent()) throw new ParkingLotNotFoundException("ParkingLot couldn't found by id: " + id);
+        try{
+            parkingLotRepository.delete(lotSummary.get());
+            log.info("ParkingLot with id is deleted: {}", id);
+        }
+        catch (Exception ex){
+            log.info("Error occurred while deleting the parkingLot, error: {}", ex.getMessage());
+        }
+    }
+
     private ParkingLotDto convertToParkingLotDto(ParkingLot parkingLot) {
         return ParkingLotDto.builder()
                 .id(parkingLot.getId())
