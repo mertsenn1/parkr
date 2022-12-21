@@ -9,5 +9,7 @@ public interface ILocationService {
 
     Location saveLocation(LocationDto locationDto);
 
+    void deleteLocation(Long id);   
+
     LocationDto convertToLocationDto(Location location);
 }

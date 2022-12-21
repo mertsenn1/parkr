@@ -13,4 +13,6 @@ public interface IUserService
     User signUp(UserDto userDto);
 
     UserDto signIn(String mail, String password);
+
+    void deleteUser(Long id);
 }

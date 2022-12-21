@@ -60,6 +60,19 @@ public class CarService implements ICarService
         return car;
     }
 
+    @Override
+    public void deleteCar(Long id){
+        Optional<Car> lotSummary = carRepository.findById(id);
+        if (!lotSummary.isPresent()) throw new CarNotFoundException("Car couldn't found by id: " + id);
+        try{
+            carRepository.delete(lotSummary.get());
+            log.info("Car with id is deleted: {}", id);
+        }
+        catch (Exception ex){
+            log.info("Error occurred while deleting the car, error: {}", ex.getMessage());
+        }
+    }
+
     public CarDto convertToCarDto(Car car) {
         return CarDto.builder()
                 .id(car.getId())

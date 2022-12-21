@@ -1,8 +1,5 @@
 package com.parkr.parkr.lot_summary;
 
-
-import com.parkr.parkr.location.Location;
-import com.parkr.parkr.location.LocationDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -18,17 +15,22 @@ public class LotSummaryService implements  ILotSummaryService{
     private final LotSummaryRepository lotSummaryRepository;
     private final ModelMapper modelMapper;
 
+    @Override
     public LotSummaryDto getLotSummaryById(Long id){
         Optional<LotSummary> lotSummary = lotSummaryRepository.findById(id);
         if (!lotSummary.isPresent()) throw new LotSummaryNotFoundException("LotSummary couldn't found by id: " + id);
         log.info("Location with the id: {} is requested", id);
         return convertToLotSummaryDto(lotSummary.get());
     }
+
+    @Override
     public List<LotSummaryDto> getAllLotSummarries(){
         List<LotSummaryDto> lotSummaryDtoList = lotSummaryRepository.findAll().stream().map(this::convertToLotSummaryDto).toList();
         log.info("All lotSummaries are requested with the size: {}", lotSummaryDtoList.size());
         return lotSummaryDtoList;
     }
+
+    @Override
     public LotSummary saveLotSummary(LotSummaryDto lotSummaryDto){
         LotSummary lotSummary;
         try{
@@ -42,6 +44,7 @@ public class LotSummaryService implements  ILotSummaryService{
         return lotSummary;
     }
 
+    @Override
     public void deleteLotSummary(Long id){
         Optional<LotSummary> lotSummary = lotSummaryRepository.findById(id);
         if (!lotSummary.isPresent()) throw new LotSummaryNotFoundException("LotSummary couldn't found by id: " + id);

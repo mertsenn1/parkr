@@ -2,6 +2,9 @@ package com.parkr.parkr.user;
 
 import com.parkr.parkr.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -34,5 +37,11 @@ public class UserController
     @GetMapping("/sign-in")
     public ApiResponse signIn(@RequestParam String mail, String password) {
         return ApiResponse.ok(userService.signIn(mail, password));
+    }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity<Void> deleteLotSummary(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return new ResponseEntity<Void>(HttpStatus.OK);
     }
 }

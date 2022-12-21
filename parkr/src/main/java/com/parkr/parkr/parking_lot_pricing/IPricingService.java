@@ -8,4 +8,6 @@ public interface IPricingService {
     List<PricingDto> getAllPricings();
 
     Pricing savePricing(PricingDto pricingDto, Long parkingLotId);
+
+    void deletePricing(Long id);
 }

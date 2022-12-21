@@ -14,4 +14,6 @@ public interface IParkingLotService
      List<ParkingLotDto> getAllParkingLots();
                            
      ParkingLot saveParkingLot(ParkingLotDto parkingLotDto, Long ownerId);
+
+     void deleteParkingLot(Long id);
 }

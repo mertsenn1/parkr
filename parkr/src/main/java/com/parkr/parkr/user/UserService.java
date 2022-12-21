@@ -107,6 +107,19 @@ public class UserService implements IUserService
         return convertToUserDto(user);
     }
 
+    @Override
+    public void deleteUser(Long id){
+        Optional<User> lotSummary = userRepository.findById(id);
+        if (!lotSummary.isPresent()) throw new UserNotFoundException("User couldn't found by id: " + id);
+        try{
+            userRepository.delete(lotSummary.get());
+            log.info("User with id is deleted: {}", id);
+        }
+        catch (Exception ex){
+            log.info("Error occurred while deleting the user, error: {}", ex.getMessage());
+        }
+    }
+
     private UserDto convertToUserDto(User user) {
         return UserDto.builder()
                 .id(user.getId())

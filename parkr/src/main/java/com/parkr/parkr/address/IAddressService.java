@@ -10,5 +10,7 @@ public interface IAddressService
 
     Address saveAddress(AddressDto addressDto);
 
+    void deleteAddress(Long id);
+
     AddressDto convertToAddressDto(Address address);
 }

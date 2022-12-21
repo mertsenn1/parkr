@@ -2,6 +2,9 @@ package com.parkr.parkr.location;
 
 import com.parkr.parkr.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -23,5 +26,11 @@ public class LocationController {
     @PostMapping()
     public ApiResponse saveLocation(@RequestBody LocationDto locationDto) {
         return ApiResponse.ok(locationService.saveLocation(locationDto));
+    }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity<Void> deleteLotSummary(@PathVariable Long id) {
+        locationService.deleteLocation(id);
+        return new ResponseEntity<Void>(HttpStatus.OK);
     }
 }
