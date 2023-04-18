@@ -25,20 +25,11 @@ public class ParkingLot
     @Column(name = "name")
     private String name;
 
-    @OneToOne
-    @JoinColumn(name = "address_id", referencedColumnName = "id")
-    private Address address;
+    @Column(name = "place_id")
+    private String placeId;
 
-    @OneToOne
-    @JoinColumn(name = "owner_id", referencedColumnName = "id")
-    private User owner;
-
-    @OneToOne
-    @JoinColumn(name = "location_id", referencedColumnName = "id")
-    private Location location;
-
-    @Column(name = "price_level")
-    private int priceLevel;
+    @Column(name = "fares")
+    private String fares;
 
     @Column(name = "photo_url")
     private String photoUrl;

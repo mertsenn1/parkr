@@ -10,28 +10,36 @@ import java.net.URI;
 @Component
 public class RequestBuilderCommon
 {
-    @Value("${google.api.key}")
-    private String GOOGLE_PLACES_API_KEY;
+    private static String GOOGLE_PLACES_API_KEY = "AIzaSyAgu7UnTtb-9hS2Aspkv6lp_n4Xu6Qm7ks";
 
-    public static final String REQUEST_URI = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
-            "location=%s,%s&language=%s&maxprice=%s&minprice=%s&opennow=%s&radius=%s&type=%s&key=%s";
+    public static final String PLACES_REQUEST_URI = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
+            "location=%s,%s&language=%s&radius=5000&type=parking&key=%s";
 
-    public RequestEntity<Void> buildRequestForLots(Double latitude, Double longitude, String language,
-                                                   Integer maxPrice, Integer minPrice, Boolean openNow,
-                                                   Integer radius, String type)
+    public static final String PLACE_REQUEST_URI = "https://maps.googleapis.com/maps/api/place/details/json?" +
+            "place_id=%s&key=%s";
+
+    public static RequestEntity<Void> buildRequestForLots(Double latitude, Double longitude, String language)
     {
-        URI uri = encodeLotUrl(latitude, longitude, language, maxPrice, minPrice, openNow, radius, type);
+        URI uri = encodeLotUrl(latitude, longitude, language);
 
         RequestEntity.HeadersBuilder<?> headersBuilder = RequestEntity.get(uri);
 
         return headersBuilder.build();
     }
 
-    private URI encodeLotUrl(Double latitude, Double longitude, String language, Integer maxPrice,
-                         Integer minPrice, Boolean openNow, Integer radius, String type)
+    public static RequestEntity<Void> buildRequestForPlace(String placeID)
     {
-        String url = String.format(REQUEST_URI, latitude, longitude, language, maxPrice,
-                                   minPrice, openNow, radius, type, GOOGLE_PLACES_API_KEY);
+        URI uri = encodePlaceUrl(placeID);
+
+        RequestEntity.HeadersBuilder<?> headersBuilder = RequestEntity.get(uri);
+
+        return headersBuilder.build();
+    }
+
+     
+    private static URI encodeLotUrl(Double latitude, Double longitude, String language)
+    {
+        String url = String.format(PLACES_REQUEST_URI, latitude, longitude, language, GOOGLE_PLACES_API_KEY);
 
         String encodedUrl = UriComponentsBuilder.fromHttpUrl(url)
                 .build()
@@ -42,4 +50,19 @@ public class RequestBuilderCommon
                 .build(true)
                 .toUri();
     }
+
+    private static URI encodePlaceUrl(String placeID)
+    {
+        String url = String.format(PLACE_REQUEST_URI, placeID, GOOGLE_PLACES_API_KEY);
+
+        String encodedUrl = UriComponentsBuilder.fromHttpUrl(url)
+                .build()
+                .encode()
+                .toUri()
+                .toString();
+        return UriComponentsBuilder.fromHttpUrl(encodedUrl)
+                .build(true)
+                .toUri();
+    }
+    
 }

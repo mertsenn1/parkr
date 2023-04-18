@@ -13,14 +13,6 @@ public class ParkingLotDto {
 
     private String name;
 
-    private AddressDto address;
-
-    private Long ownerId;
-
-    private LocationDto location;
-
-    private int priceLevel;
-
     private String photoUrl;
 
     private ParkingLotStatus status;

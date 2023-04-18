@@ -26,7 +26,6 @@ public class UserService implements IUserService
     @Override
     public UserDto getUserById(Long id)
     {
-        System.out.println("HERE: \n" + userRepository.findCarsOfUser(id));
         Optional<User> user = userRepository.findById(id);
 
         if (user.isEmpty()) return null;
@@ -36,20 +35,29 @@ public class UserService implements IUserService
         return convertToUserDto(user.get());
     }
 
+    
     @Override
     public List<UserDto> getAllCustomers()
     {
+        return null;
+        /* 
         List<UserDto> customers = userRepository.findAllByIsOwnerIsFalse().stream().map(this::convertToUserDto).toList();
         log.info("All customers are requested with the size: {}", customers.size());
         return customers;
+        */
     }
+    
 
+    /* */
     @Override
     public List<UserDto> getAllOwners()
     {
+        return null;
+        /* 
         List<UserDto> owners = userRepository.findAllByIsOwnerIsTrue().stream().map(this::convertToUserDto).toList();
         log.info("All owners are requested with the size: {}", owners.size());
         return owners;
+        */
     }
 
     @Override
@@ -126,7 +134,7 @@ public class UserService implements IUserService
                 .mail(user.getMail())
                 .name(user.getName())
                 .phone(user.getPhone())
-                .isOwner(user.getIsOwner())
+                .type(user.getType())
                 .address(addressService.convertToAddressDto(user.getAddress()))
                 .cars(convertToCarDtos(userRepository.findCarsOfUser(user.getId()))) // to display cars
                 .build();
@@ -157,7 +165,7 @@ public class UserService implements IUserService
     private User convertToUser(UserDto userDto, Address address) {
         return new User(null, userDto.getMail(), userDto.getName(),
                 userDto.getPassword(), userDto.getPhone(),
-                userDto.getIsOwner(), address);
+                userDto.getType(), address, null);
     }
 
 }

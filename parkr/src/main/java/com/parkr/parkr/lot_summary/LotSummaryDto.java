@@ -1,9 +1,9 @@
 package com.parkr.parkr.lot_summary;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.parkr.parkr.car.Car;
 import com.parkr.parkr.parking_lot.ParkingLot;
 import com.parkr.parkr.user.User;
-import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Data;
 
@@ -16,7 +16,7 @@ public class LotSummaryDto {
 
     private ParkingLot parkingLot;
 
-    private User user;
+    private Car car;
 
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     private LocalDateTime startTime;

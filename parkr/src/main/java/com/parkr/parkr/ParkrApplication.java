@@ -5,6 +5,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
+import com.parkr.parkr.common.GoogleServices;
+
 
 @SpringBootApplication
 public class ParkrApplication {
@@ -13,6 +15,8 @@ public class ParkrApplication {
 		return new ModelMapper();
 	}
 	public static void main(String[] args) {
+		//System.out.println(GoogleServices.crawlNearbyLots(39.865398, 32.748820, "en", true)); // nearby bilkent.
+
 		SpringApplication.run(ParkrApplication.class, args);
 	}
 

@@ -10,9 +10,6 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long>
 {
-    List<User> findAllByIsOwnerIsTrue();
-
-    List<User> findAllByIsOwnerIsFalse();
 
     User findByMailAndPassword(String mail, String password);
 

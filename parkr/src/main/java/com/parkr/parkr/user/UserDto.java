@@ -21,7 +21,7 @@ public class UserDto
 
     private String phone;
 
-    private Boolean isOwner;
+    private String type;
 
     private AddressDto address;
 

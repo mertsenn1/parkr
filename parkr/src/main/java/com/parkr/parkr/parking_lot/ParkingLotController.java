@@ -3,6 +3,8 @@ package com.parkr.parkr.parking_lot;
 import com.parkr.parkr.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -21,6 +23,25 @@ public class ParkingLotController
 {
     private final IParkingLotService parkingLotService;
 
+    @PostMapping(value = "/nearby")
+    public ApiResponse getNearbyParkingLots(@RequestBody String json) {
+        JSONObject jsonObject = new JSONObject(json);
+        Double latitude = jsonObject.getDouble("latitude");
+        Double longitude = jsonObject.getDouble("longitude");
+        JSONArray results = parkingLotService.getNearbyLots(latitude, longitude, "en");
+        return ApiResponse.ok(results.toList());
+    }
+
+    @PostMapping(value = "/place-details")
+    public ApiResponse getPlaceDetails(@RequestBody String json) {
+        JSONObject jsonObject = new JSONObject(json);
+        String placeID = jsonObject.getString("placeID");
+        JSONObject result = parkingLotService.getParkingLotByPlaceID(placeID);
+        if (result == null) {
+            return ApiResponse.ok(new JSONObject()); // will change.
+        }
+        return ApiResponse.ok(result.toMap());
+    }
 
     @GetMapping("{id}")
     public ApiResponse getParkingLotById(@PathVariable Long id) {
@@ -34,7 +55,8 @@ public class ParkingLotController
 
     @PostMapping()
     public ApiResponse saveParkingLot(@RequestBody ParkingLotDto parkingLotDto) {
-        return ApiResponse.ok(parkingLotService.saveParkingLot(parkingLotDto, parkingLotDto.getOwnerId()));
+        return null;
+        //return ApiResponse.ok(parkingLotService.saveParkingLot(parkingLotDto, parkingLotDto.getOwnerId()));
     }
 
     @DeleteMapping("{id}")

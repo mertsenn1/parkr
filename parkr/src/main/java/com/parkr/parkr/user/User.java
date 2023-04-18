@@ -1,6 +1,12 @@
 package com.parkr.parkr.user;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
+
 import com.parkr.parkr.address.Address;
+import com.parkr.parkr.parking_lot.ParkingLot;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,10 +36,17 @@ public class User
     @Column(name = "phone")
     private String phone;
 
-    @Column(name = "is_owner")
-    private Boolean isOwner;
+    @Column(name = "type")
+    private String type;
 
     @OneToOne
     @JoinColumn(name = "address_id", referencedColumnName = "id")
     private Address address;
+
+    @ManyToMany
+    @JoinTable(
+    name = "user_lots", 
+    joinColumns = @JoinColumn(name = "user_id"), 
+    inverseJoinColumns = @JoinColumn(name = "parking_lot_id"))
+    List<ParkingLot> parkingLots;
 }
