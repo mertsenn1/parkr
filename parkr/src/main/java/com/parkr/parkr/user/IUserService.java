@@ -2,6 +2,9 @@ package com.parkr.parkr.user;
 
 import java.util.List;
 
+import com.parkr.parkr.auth.AuthenticationRequest;
+import com.parkr.parkr.auth.AuthenticationResponse;
+
 public interface IUserService
 {
     UserDto getUserById(Long id);
@@ -10,9 +13,9 @@ public interface IUserService
 
     List<UserDto> getAllOwners() ;
 
-    User signUp(UserDto userDto);
+    AuthenticationResponse signUp(UserDto userDto);
 
-    UserDto signIn(String mail, String password);
+    AuthenticationResponse signIn(AuthenticationRequest request);
 
     void deleteUser(Long id);
 }

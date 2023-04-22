@@ -7,6 +7,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +25,7 @@ public class ParkingLotController
     private final IParkingLotService parkingLotService;
 
     @PostMapping(value = "/nearby")
+    @PreAuthorize("hasAuthority('USER')")
     public ApiResponse getNearbyParkingLots(@RequestBody String json) {
         JSONObject jsonObject = new JSONObject(json);
         Double latitude = jsonObject.getDouble("latitude");
@@ -33,6 +35,7 @@ public class ParkingLotController
     }
 
     @PostMapping(value = "/place-details")
+    @PreAuthorize("hasAuthority('USER')")
     public ApiResponse getPlaceDetails(@RequestBody String json) {
         JSONObject jsonObject = new JSONObject(json);
         String placeID = jsonObject.getString("placeID");

@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,6 +16,7 @@ public class ReviewController {
     private final IReviewService reviewService;
 
     @GetMapping("{id}")
+    @PreAuthorize("hasAuthority('USER')")
     public ApiResponse getReviewById(@PathVariable Long id) {
         return ApiResponse.ok(reviewService.getReviewById(id));
     }
@@ -25,6 +27,7 @@ public class ReviewController {
     }
 
     @PostMapping()
+    @PreAuthorize("hasAuthority('USER')")
     public ApiResponse saveReview(@RequestBody ReviewDto reviewDto) {
         return ApiResponse.ok(reviewService.saveReview(reviewDto, reviewDto.getParkingLotId()));
     }

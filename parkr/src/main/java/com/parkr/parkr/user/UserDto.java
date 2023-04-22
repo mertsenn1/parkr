@@ -26,6 +26,8 @@ public class UserDto
     private AddressDto address;
 
     private List<CarDto> cars;
+
+    private Role role;
     /* 
     private String country;
 

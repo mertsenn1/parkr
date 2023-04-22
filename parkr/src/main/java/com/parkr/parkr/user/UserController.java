@@ -1,10 +1,12 @@
 package com.parkr.parkr.user;
 
+import com.parkr.parkr.auth.AuthenticationRequest;
 import com.parkr.parkr.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,6 +17,7 @@ public class UserController
     private final IUserService userService;
 
     @GetMapping("{id}")
+    @PreAuthorize("hasAuthority('USER')")
     public ApiResponse getUserById(@PathVariable Long id) {
         return ApiResponse.ok(userService.getUserById(id));
     }
@@ -35,8 +38,9 @@ public class UserController
     }
 
     @GetMapping("/sign-in")
-    public ApiResponse signIn(@RequestParam String mail, String password) {
-        return ApiResponse.ok(userService.signIn(mail, password));
+    @PreAuthorize("hasAuthority('USER')")
+    public ApiResponse signIn(@RequestBody AuthenticationRequest request) {
+        return ApiResponse.ok(userService.signIn(request));
     }
 
     @DeleteMapping("{id}")
