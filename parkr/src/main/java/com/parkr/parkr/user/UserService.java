@@ -9,6 +9,9 @@ import com.parkr.parkr.car.Car;
 import com.parkr.parkr.car.CarDto;
 import com.parkr.parkr.car.ICarService;
 import com.parkr.parkr.config.JwtService;
+import com.parkr.parkr.token.Token;
+import com.parkr.parkr.token.TokenRepository;
+import com.parkr.parkr.token.TokenType;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +31,7 @@ import java.util.Optional;
 public class UserService implements IUserService
 {
     private final UserRepository userRepository;
+    private final TokenRepository tokenRepository;
     private final IAddressService addressService;
     private final ICarService carService;
     private final PasswordEncoder passwordEncoder;
@@ -116,8 +120,10 @@ public class UserService implements IUserService
         user.setType(request.getType());
         user.setRole(Role.USER);
         user.setAddress(address);
-        userRepository.save(user);
+        user.setTokentType(TokenType.BEARER);
+        User savedUser = userRepository.save(user);
         String jwtToken = jwtService.generateToken(user);
+        saveUserToken(savedUser, jwtToken);
 
         if (carDtos != null) {
             carDtos.forEach(carDto -> {
@@ -134,6 +140,8 @@ public class UserService implements IUserService
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getMail(), request.getPassword()));
         User user = userRepository.findByMail(request.getMail()).get();
         String jwtToken = jwtService.generateToken(user);
+        revokeAllUserTokens(user);
+        saveUserToken(user, jwtToken);
         return AuthenticationResponse.builder()
             .token(jwtToken)
             .build();
@@ -191,7 +199,27 @@ public class UserService implements IUserService
     private User convertToUser(UserDto userDto, Address address) {
         return new User(null, userDto.getMail(), userDto.getName(),
                 userDto.getPassword(), userDto.getPhone(),
-                userDto.getType(), address, null, userDto.getRole());
+                userDto.getType(), address, null, null, userDto.getRole());
+    }
+
+    private void saveUserToken(User savedUser, String jwtToken) {
+        Token token = Token.builder()
+            .user(savedUser)
+            .token(jwtToken)
+            .tokenType(TokenType.BEARER)
+            .expired(false)
+            .revoked(false)
+            .build();
+        tokenRepository.save(token);
+    }
+
+    private void revokeAllUserTokens(User user) {
+        List<Token> validUserTokens = tokenRepository.findAllValidTokensByUser(user.getId());
+        validUserTokens.forEach(token -> {
+            token.setRevoked(true);
+            token.setExpired(true);
+        });
+        tokenRepository.saveAll(validUserTokens);
     }
 
 }
