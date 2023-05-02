@@ -3,6 +3,8 @@ package com.parkr.parkr.common;
 
 
 
+import java.util.Map;
+
 import org.json.JSONObject;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.google.gson.JsonElement;
+import com.parkr.parkr.car.FuelType;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,6 +63,25 @@ public class GoogleServices {
         }
         catch (Exception ex) {
             log.error("Error occurred while crawling lot error: {}", ex.getMessage());
+            throw new RuntimeException(ex.getMessage());
+        }
+    }
+
+    public static JSONObject getEcoFriendlyRoute(Double originLatitude, Double originLongitude, Double destinationLatitude, Double destinationLongitude, String fuelType) {
+        try
+        {
+            RequestEntity<Map<String, Object>> requestEntity = RequestBuilderCommon.buildRequestFuelEfficientRoute(originLatitude, originLongitude, destinationLatitude, destinationLongitude, fuelType);
+            RestTemplate restTemplate = new RestTemplate();
+
+            ResponseEntity<String> response = restTemplate.exchange(requestEntity, String.class);
+
+            log.info("Finding eco friendly route is successful for origin-latitude: {} origin_longitude: {} destination-latitude: {} destination_longitude: {}", originLatitude, originLongitude, destinationLatitude, destinationLongitude);
+
+            JSONObject json = new JSONObject(response.getBody());
+            return json;
+        }
+        catch (Exception ex) {
+            log.error("Error occurred while finding fuel efficient routes: {}", ex.getMessage());
             throw new RuntimeException(ex.getMessage());
         }
     }

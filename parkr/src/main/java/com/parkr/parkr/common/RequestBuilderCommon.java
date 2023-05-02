@@ -1,11 +1,22 @@
 package com.parkr.parkr.common;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.parkr.parkr.car.FuelType;
+
+import java.io.IOException;
 import java.net.URI;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Component
 public class RequestBuilderCommon
@@ -17,6 +28,8 @@ public class RequestBuilderCommon
 
     public static final String PLACE_REQUEST_URI = "https://maps.googleapis.com/maps/api/place/details/json?" +
             "place_id=%s&key=%s";
+
+        public static final String ROUTE_REQUEST_URI = "https://routes.googleapis.com/directions/v2:computeRoutes";
 
     public static RequestEntity<Void> buildRequestForLots(Double latitude, Double longitude, String language)
     {
@@ -34,6 +47,41 @@ public class RequestBuilderCommon
         RequestEntity.HeadersBuilder<?> headersBuilder = RequestEntity.get(uri);
 
         return headersBuilder.build();
+    }
+
+    public static RequestEntity<Map<String, Object>> buildRequestFuelEfficientRoute(Double originLatitude, Double originLongitude, Double destinationLatitude, Double destinationLongitude, String emissionType) throws IOException{
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        headers.set("X-Goog-Api-Key", GOOGLE_PLACES_API_KEY);
+        headers.set("X-Goog-FieldMask", "routes.distanceMeters,routes.duration,routes.routeLabels,routes.routeToken,routes.travelAdvisory.fuelConsumptionMicroliters");
+
+        URI uri = UriComponentsBuilder.fromHttpUrl(ROUTE_REQUEST_URI).build().toUri();
+
+        Map<String, Object> origin = new HashMap<>();
+        origin.put("latitude", originLatitude);
+        origin.put("longitude", originLongitude);
+
+        Map<String, Object> destination = new HashMap<>();
+        destination.put("latitude", destinationLatitude);
+        destination.put("longitude", destinationLongitude);
+
+        Map<String, Object> vehicleInfo = new HashMap<>();
+        vehicleInfo.put("emissionType", emissionType);
+
+        Map<String, Object> routeModifiers = new HashMap<>();
+        routeModifiers.put("vehicleInfo", vehicleInfo);
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("origin", Map.of("location", Map.of("latLng", Map.of("latitude", originLatitude, "longitude", originLongitude))));
+        requestBody.put("destination", Map.of("location", Map.of("latLng", Map.of("latitude", destinationLatitude, "longitude", destinationLongitude))));
+        requestBody.put("routeModifiers", Map.of("vehicleInfo", Map.of("emissionType", emissionType)));
+        requestBody.put("travelMode", "DRIVE");
+        requestBody.put("routingPreference", "TRAFFIC_AWARE_OPTIMAL");
+        requestBody.put("extraComputations", List.of("FUEL_CONSUMPTION"));
+        requestBody.put("requestedReferenceRoutes", List.of("FUEL_EFFICIENT"));
+
+        return new RequestEntity<>(requestBody, headers, HttpMethod.POST, uri);
     }
 
      

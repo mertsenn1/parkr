@@ -118,7 +118,6 @@ public class UserService implements IUserService
         user.setName(request.getName());
         user.setPhone(request.getPhone());
         user.setRole(Role.USER);
-        user.setAddress(address);
         user.setTokentType(TokenType.BEARER);
         User savedUser = userRepository.save(user);
         String jwtToken = jwtService.generateToken(user);
@@ -173,7 +172,6 @@ public class UserService implements IUserService
                 .mail(user.getMail())
                 .name(user.getName())
                 .phone(user.getPhone())
-                .address(addressService.convertToAddressDto(user.getAddress()))
                 .cars(convertToCarDtos(userRepository.findCarsOfUser(user.getId()))) // to display cars
                 .role(user.getRole())
                 .build();
@@ -197,7 +195,7 @@ public class UserService implements IUserService
     private User convertToUser(UserDto userDto, Address address) {
         return new User(null, userDto.getMail(), userDto.getName(),
                 userDto.getPassword(), userDto.getPhone(),
-                address, null, null, userDto.getRole());
+                null, null, userDto.getRole());
     }
 
     private void saveUserToken(User savedUser, String jwtToken) {

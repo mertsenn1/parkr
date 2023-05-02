@@ -13,4 +13,6 @@ public interface ICarService
     void deleteCar(Long id);
 
     CarDto convertToCarDto(Car car);
+
+    Double getFuelConsumptionInLiters(Double originLatitude, Double originLongitude, Double destinationLatitude, Double destinationLongitude, FuelType emissionType);
 }
