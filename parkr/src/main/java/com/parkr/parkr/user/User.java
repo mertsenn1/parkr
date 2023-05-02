@@ -49,10 +49,6 @@ public class User implements UserDetails
     @Column(name = "phone")
     private String phone;
 
-    @OneToOne
-    @JoinColumn(name = "address_id", referencedColumnName = "id")
-    private Address address;
-
     @ManyToMany
     @JoinTable(
     name = "user_lots", 

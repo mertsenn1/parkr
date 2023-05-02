@@ -5,6 +5,7 @@ import com.parkr.parkr.common.ApiResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 
+import org.json.JSONObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,6 +31,21 @@ public class CarController
         return ApiResponse.ok(carService.getAllCars());
     }
 
+    @PostMapping(value = "fuel")
+    @PreAuthorize("hasAuthority('USER')")
+    public ApiResponse getFuelLiter(@RequestBody String json) {
+        JSONObject jsonObject = new JSONObject(json);
+        Double originLatitude = jsonObject.getDouble("originLatitude");
+        Double originLongitude = jsonObject.getDouble("originLongitude");
+        Double destinationLatitude = jsonObject.getDouble("destinationLatitude");
+        Double destinationLongitude = jsonObject.getDouble("destinationLongitude");
+        String emissionType = jsonObject.getString("emissionType");
+        Double fuelInLitter = carService.getFuelConsumptionInLiters(originLatitude, originLongitude, destinationLatitude, destinationLongitude, FuelType.valueOf(emissionType));
+        //Double originLatitude, Double originLongitude, Double destinationLatitude, Double destinationLongitude, FuelType emissionType
+        return ApiResponse.ok(fuelInLitter);
+    }
+
+
     @PostMapping()
     @PreAuthorize("hasAuthority('USER')")
     public ApiResponse saveCar(@RequestBody CarDto carDto) {
@@ -38,7 +54,7 @@ public class CarController
 
     @DeleteMapping("{id}")
     @PreAuthorize("hasAuthority('USER')")
-    public ResponseEntity<Void> deleteLotSummary(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteCar(@PathVariable Long id) {
         carService.deleteCar(id);
         return new ResponseEntity<Void>(HttpStatus.OK);
     }

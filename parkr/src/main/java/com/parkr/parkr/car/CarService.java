@@ -2,8 +2,12 @@ package com.parkr.parkr.car;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.stereotype.Service;
 
+import com.parkr.parkr.common.GoogleServices;
 import com.parkr.parkr.user.User;
 import com.parkr.parkr.user.UserRepository;
 
@@ -71,6 +75,40 @@ public class CarService implements ICarService
         catch (Exception ex){
             log.info("Error occurred while deleting the car, error: {}", ex.getMessage());
         }
+    }
+
+    @Override
+    public Double getFuelConsumptionInLiters(Double originLatitude, Double originLongitude, Double destinationLatitude, Double destinationLongitude, FuelType emissionType){
+        JSONObject jsonResponse = GoogleServices.getEcoFriendlyRoute(originLatitude, originLongitude, destinationLatitude, destinationLongitude, emissionType.toString());
+        JSONArray routes = jsonResponse.getJSONArray("routes");
+        double fuelConsumptionMicroliters = -1;
+    
+        for (int i = 0; i < routes.length(); i++) {
+            JSONObject route = routes.getJSONObject(i);
+            JSONArray routeLabels = route.getJSONArray("routeLabels");
+    
+            for (int j = 0; j < routeLabels.length(); j++) {
+                String label = routeLabels.getString(j);
+    
+                if ("FUEL_EFFICIENT".equals(label)) {
+                    JSONObject travelAdvisory = route.getJSONObject("travelAdvisory");
+                    fuelConsumptionMicroliters = travelAdvisory.getDouble("fuelConsumptionMicroliters");
+                    break;
+                }
+            }
+    
+            if (fuelConsumptionMicroliters != -1) {
+                break;
+            }
+        }
+    
+        if (fuelConsumptionMicroliters == -1) {
+            throw new RuntimeException("FUEL_EFFICIENT route not found in the response");
+        }
+    
+        // Convert microliters to liters
+        double fuelConsumptionLiters = fuelConsumptionMicroliters / 1_000_000;
+        return fuelConsumptionLiters;
     }
 
     public CarDto convertToCarDto(Car car) {
