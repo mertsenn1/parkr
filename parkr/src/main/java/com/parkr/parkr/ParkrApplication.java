@@ -7,8 +7,12 @@ import org.springframework.context.annotation.Bean;
 
 import com.parkr.parkr.common.GoogleServices;
 
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 
 @SpringBootApplication
+@SecurityScheme(name = "parkr", scheme = "basic", type = SecuritySchemeType.HTTP, in = SecuritySchemeIn.HEADER)
 public class ParkrApplication {
 	@Bean
 	public ModelMapper modelMapper(){

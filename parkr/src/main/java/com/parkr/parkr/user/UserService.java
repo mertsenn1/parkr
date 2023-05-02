@@ -3,11 +3,22 @@ package com.parkr.parkr.user;
 import com.parkr.parkr.address.Address;
 import com.parkr.parkr.address.AddressDto;
 import com.parkr.parkr.address.IAddressService;
+import com.parkr.parkr.auth.AuthenticationRequest;
+import com.parkr.parkr.auth.AuthenticationResponse;
 import com.parkr.parkr.car.Car;
 import com.parkr.parkr.car.CarDto;
 import com.parkr.parkr.car.ICarService;
+import com.parkr.parkr.config.JwtService;
+import com.parkr.parkr.token.Token;
+import com.parkr.parkr.token.TokenRepository;
+import com.parkr.parkr.token.TokenType;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -20,8 +31,12 @@ import java.util.Optional;
 public class UserService implements IUserService
 {
     private final UserRepository userRepository;
+    private final TokenRepository tokenRepository;
     private final IAddressService addressService;
     private final ICarService carService;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
 
     @Override
     public UserDto getUserById(Long id)
@@ -61,38 +76,30 @@ public class UserService implements IUserService
     }
 
     @Override
-    public User signUp(UserDto userDto)
+    public AuthenticationResponse signUp(UserDto userDto)
     {
-        /*
-         * AddressDto.builder()
-                .country(userDto.getCountry())
-                .city(userDto.getCity())
-                .district(userDto.getDistrict())
-                .street(userDto.getStreet())
-                .build();
-         */
         AddressDto addressDto = userDto.getAddress(); 
         List<CarDto> carDtos = userDto.getCars();
 
-        User user;
+        //User user;
+        AuthenticationResponse response;
         try
         {
             Address address = addressService.saveAddress(addressDto);
             if (address == null)
                 throw new Exception();
 
-            user = userRepository.save(convertToUser(userDto, address));
+            //user = userRepository.save(convertToUser(userDto, address));
 
+            response = register(userDto, address, carDtos);
+
+            /* 
             if (carDtos != null) {
-                /*
-                for (CarDto carDto : carDtos) {
-                    carService.saveCar(carDto, user.getId());
-                }
-                */
                 carDtos.forEach(carDto -> {
                     carService.saveCar(carDto, user.getId());
                 });
             }
+            */
             
             log.info("User {} is saved with mail: {}", userDto.getName(), userDto.getMail());
         }
@@ -101,18 +108,50 @@ public class UserService implements IUserService
             log.info("Error occurred while saving the user: {} with mail: {} error: {}", userDto.getName(), userDto.getMail(), ex.getMessage());
             return null;
         }
-        return user;
+        return response;
+    }
+
+    private AuthenticationResponse register(UserDto request, Address address, List<CarDto> carDtos){
+        User user = new User();
+        user.setMail(request.getMail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setName(request.getName());
+        user.setPhone(request.getPhone());
+        user.setRole(Role.USER);
+        user.setAddress(address);
+        user.setTokentType(TokenType.BEARER);
+        User savedUser = userRepository.save(user);
+        String jwtToken = jwtService.generateToken(user);
+        saveUserToken(savedUser, jwtToken);
+
+        if (carDtos != null) {
+            carDtos.forEach(carDto -> {
+                carService.saveCar(carDto, user.getId());
+            });
+        }
+        return AuthenticationResponse.builder()
+        .token(jwtToken)
+        .build();
     }
 
     @Override
-    public UserDto signIn(String mail, String password)
-    {
+    public AuthenticationResponse signIn(AuthenticationRequest request){
+        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getMail(), request.getPassword()));
+        User user = userRepository.findByMail(request.getMail()).get();
+        String jwtToken = jwtService.generateToken(user);
+        revokeAllUserTokens(user);
+        saveUserToken(user, jwtToken);
+        return AuthenticationResponse.builder()
+            .token(jwtToken)
+            .build();
+        /* 
         User user = userRepository.findByMailAndPassword(mail, password);
 
         if (user == null) return null;
 
         log.info("User {} is logged in with mail: {}", user.getName(), user.getMail());
         return convertToUserDto(user);
+        */
     }
 
     @Override
@@ -134,9 +173,9 @@ public class UserService implements IUserService
                 .mail(user.getMail())
                 .name(user.getName())
                 .phone(user.getPhone())
-                .type(user.getType())
                 .address(addressService.convertToAddressDto(user.getAddress()))
                 .cars(convertToCarDtos(userRepository.findCarsOfUser(user.getId()))) // to display cars
+                .role(user.getRole())
                 .build();
     }
 
@@ -146,13 +185,6 @@ public class UserService implements IUserService
         }
 
         List<CarDto> carDtos = new ArrayList<>();
-        /* 
-        for (Car car : cars) {
-            CarDto carDto = carService.convertToCarDto(car);
-
-            carDtos.add(carDto);
-        }
-        */
 
         cars.forEach(car -> {
             CarDto carDto = carService.convertToCarDto(car);
@@ -165,7 +197,27 @@ public class UserService implements IUserService
     private User convertToUser(UserDto userDto, Address address) {
         return new User(null, userDto.getMail(), userDto.getName(),
                 userDto.getPassword(), userDto.getPhone(),
-                userDto.getType(), address, null);
+                address, null, null, userDto.getRole());
+    }
+
+    private void saveUserToken(User savedUser, String jwtToken) {
+        Token token = Token.builder()
+            .user(savedUser)
+            .token(jwtToken)
+            .tokenType(TokenType.BEARER)
+            .expired(false)
+            .revoked(false)
+            .build();
+        tokenRepository.save(token);
+    }
+
+    private void revokeAllUserTokens(User user) {
+        List<Token> validUserTokens = tokenRepository.findAllValidTokensByUser(user.getId());
+        validUserTokens.forEach(token -> {
+            token.setRevoked(true);
+            token.setExpired(true);
+        });
+        tokenRepository.saveAll(validUserTokens);
     }
 
 }

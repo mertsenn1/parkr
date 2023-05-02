@@ -4,6 +4,7 @@ import com.parkr.parkr.common.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -13,6 +14,7 @@ public class LotSummaryController {
     private final ILotSummaryService lotSummaryService;
 
     @GetMapping("{id}")
+    @PreAuthorize("hasAuthority('USER') or hasAuthority('LOT_WORKER')")
     public ApiResponse getLotSummaryById(@PathVariable Long id) {
         return ApiResponse.ok(lotSummaryService.getLotSummaryById(id));
     }

@@ -1,20 +1,25 @@
 package com.parkr.parkr.address;
 
 import com.parkr.parkr.common.ApiResponse;
+
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/addresses")
 @RequiredArgsConstructor
+@SecurityRequirement(name = "parkr")
 public class AddressController
 {
     private final IAddressService addressService;
 
     @GetMapping("{id}")
+    @PreAuthorize("hasRole('USER')")
     public ApiResponse getAddressById(@PathVariable Long id) {
         return ApiResponse.ok(addressService.getAddressById(id));
     }
@@ -25,11 +30,13 @@ public class AddressController
     }
 
     @PostMapping()
+    @PreAuthorize("hasRole('USER')")
     public ApiResponse saveAddress(@RequestBody AddressDto addressDto) {
         return ApiResponse.ok(addressService.saveAddress(addressDto));
     }
 
     @DeleteMapping("{id}")
+    @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Void> deleteLotSummary(@PathVariable Long id) {
         addressService.deleteAddress(id);
         return new ResponseEntity<Void>(HttpStatus.OK);
