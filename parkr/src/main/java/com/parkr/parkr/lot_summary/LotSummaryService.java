@@ -3,8 +3,14 @@ package com.parkr.parkr.lot_summary;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.parkr.parkr.parking_lot.ParkingLotRepository;
+import com.parkr.parkr.response.ParkingInfoModel;
+import com.parkr.parkr.user.User;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +19,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class LotSummaryService implements  ILotSummaryService{
     private final LotSummaryRepository lotSummaryRepository;
+    private final ParkingLotRepository parkingLotRepository;
     private final ModelMapper modelMapper;
 
     @Override
@@ -65,5 +72,47 @@ public class LotSummaryService implements  ILotSummaryService{
     private LotSummary convertToLotSummary(LotSummaryDto lotSummaryDto){
         LotSummary lotSummary = modelMapper.map(lotSummaryDto, LotSummary.class);
         return lotSummary;
+    }
+
+    @Override
+    public List<ParkingInfoModel> getCurrentParkingData() {
+        
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        System.out.println(currentUser.getId());
+
+        List<LotSummary> summaryList = lotSummaryRepository.getCurrentLotSummariesOfUser(currentUser.getId());
+
+        ArrayList<ParkingInfoModel> responseList = new ArrayList<>();
+        summaryList.forEach(summary -> {
+            ParkingInfoModel responseModel = new ParkingInfoModel();
+            responseModel.setId(summary.getId());
+            responseModel.setName(summary.getParkingLot().getName());
+            responseModel.setFee(summary.getFee());
+            responseModel.setStartTime(summary.getStartTime());
+
+            responseList.add(responseModel);
+        });
+        return responseList;
+    }
+
+    @Override
+    public List<ParkingInfoModel> getPastParkingData() {
+        
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        System.out.println(currentUser.getId());
+
+        List<LotSummary> summaryList = lotSummaryRepository.getPastLotSummariesOfUser(currentUser.getId());
+
+        ArrayList<ParkingInfoModel> responseList = new ArrayList<>();
+        summaryList.forEach(summary -> {
+            ParkingInfoModel responseModel = new ParkingInfoModel();
+            responseModel.setId(summary.getId());
+            responseModel.setName(summary.getParkingLot().getName());
+            responseModel.setFee(null);
+            responseModel.setStartTime(summary.getStartTime());
+
+            responseList.add(responseModel);
+        });
+        return responseList;
     }
 }

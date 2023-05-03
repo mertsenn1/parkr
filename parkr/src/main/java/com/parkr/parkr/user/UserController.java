@@ -2,11 +2,14 @@ package com.parkr.parkr.user;
 
 import com.parkr.parkr.auth.AuthenticationRequest;
 import com.parkr.parkr.common.ApiResponse;
+import com.parkr.parkr.lot_summary.ILotSummaryService;
+
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 public class UserController
 {
     private final IUserService userService;
+    private final ILotSummaryService lotSummaryService;
 
     @GetMapping("{id}")
     @PreAuthorize("hasAuthority('USER')")
@@ -22,14 +26,16 @@ public class UserController
         return ApiResponse.ok(userService.getUserById(id));
     }
 
-    @GetMapping("/customers")
-    public ApiResponse getAllCustomers() {
-        return ApiResponse.ok(userService.getAllCustomers());
+    @GetMapping("/current-parking")
+    @PreAuthorize("hasAuthority('USER')")
+    public ApiResponse getCurrentParkingData() {
+        return ApiResponse.ok(lotSummaryService.getCurrentParkingData());
     }
 
-    @GetMapping("/owners")
-    public ApiResponse getAllOwners() {
-        return ApiResponse.ok(userService.getAllOwners());
+    @GetMapping("/past-parking")
+    @PreAuthorize("hasAuthority('USER')")
+    public ApiResponse getPastParkingData() {
+        return ApiResponse.ok(lotSummaryService.getPastParkingData());
     }
 
     @PostMapping("/sign-up")

@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class LotSummary {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
@@ -37,5 +37,5 @@ public class LotSummary {
     private LocalDateTime endTime;
 
     @Column(name = "fee")
-    private int fee;
+    private Integer fee;
 }
