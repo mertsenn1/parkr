@@ -1,4 +1,9 @@
 steps:
+  - name: 'change working directory'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - 'cd parkr'
   - name: 'maven'
     entrypoint: 'mvn'
     args: ['clean', 'install', '-DskipTests']
