@@ -6,8 +6,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.parkr.parkr.common.ParkingInfoModel;
 import com.parkr.parkr.parking_lot.ParkingLotRepository;
-import com.parkr.parkr.response.ParkingInfoModel;
 import com.parkr.parkr.user.User;
 
 import java.util.ArrayList;

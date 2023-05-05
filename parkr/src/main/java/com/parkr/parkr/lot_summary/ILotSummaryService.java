@@ -2,7 +2,7 @@ package com.parkr.parkr.lot_summary;
 
 import java.util.List;
 
-import com.parkr.parkr.response.ParkingInfoModel;
+import com.parkr.parkr.common.ParkingInfoModel;
 
 public interface ILotSummaryService {
     LotSummaryDto getLotSummaryById(Long id);
