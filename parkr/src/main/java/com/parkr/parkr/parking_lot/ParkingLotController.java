@@ -1,6 +1,9 @@
 package com.parkr.parkr.parking_lot;
 
 import com.parkr.parkr.common.ApiResponse;
+import com.parkr.parkr.common.LocationModel;
+import com.parkr.parkr.common.PlaceDetailRequestModel;
+
 import lombok.RequiredArgsConstructor;
 
 import org.json.JSONArray;
@@ -26,24 +29,16 @@ public class ParkingLotController
 
     @PostMapping(value = "/nearby")
     @PreAuthorize("hasAuthority('USER')")
-    public ApiResponse getNearbyParkingLots(@RequestBody String json) {
-        JSONObject jsonObject = new JSONObject(json);
-        Double latitude = jsonObject.getDouble("latitude");
-        Double longitude = jsonObject.getDouble("longitude");
-        JSONArray results = parkingLotService.getNearbyLots(latitude, longitude, "en");
-        return ApiResponse.ok(results.toList());
+    public ApiResponse getNearbyParkingLots(@RequestBody LocationModel location) {
+        Double latitude = location.getLatitude();
+        Double longitude = location.getLongitude();
+        return ApiResponse.ok(parkingLotService.getNearbyLots(latitude, longitude));
     }
 
     @PostMapping(value = "/place-details")
     @PreAuthorize("hasAuthority('USER')")
-    public ApiResponse getPlaceDetails(@RequestBody String json) {
-        JSONObject jsonObject = new JSONObject(json);
-        String placeID = jsonObject.getString("placeID");
-        JSONObject result = parkingLotService.getParkingLotByPlaceID(placeID);
-        if (result == null) {
-            return ApiResponse.ok(new JSONObject()); // will change.
-        }
-        return ApiResponse.ok(result.toMap());
+    public ApiResponse getPlaceDetails(@RequestBody PlaceDetailRequestModel place) {
+        return ApiResponse.ok(parkingLotService.getParkingLotByPlaceID(place.getPlaceID()));
     }
 
     @GetMapping("{id}")

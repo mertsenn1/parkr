@@ -5,6 +5,9 @@ import com.parkr.parkr.address.Address;
 import com.parkr.parkr.address.AddressDto;
 import com.parkr.parkr.address.IAddressService;
 import com.parkr.parkr.common.GoogleServices;
+import com.parkr.parkr.common.LocationModel;
+import com.parkr.parkr.common.ParkingLotDetailModel;
+import com.parkr.parkr.common.ParkingLotModel;
 import com.parkr.parkr.location.ILocationService;
 import com.parkr.parkr.location.Location;
 import com.parkr.parkr.location.LocationDto;
@@ -14,6 +17,7 @@ import com.parkr.parkr.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,32 +32,23 @@ public class ParkingLotService implements IParkingLotService
 {
 
     private final ParkingLotRepository parkingLotRepository;
-    private final UserRepository userRepository;
-
-    private final IAddressService addressService;
-    private final ILocationService locationService;
 
     @Override
-    public JSONArray getNearbyLots(Double latitude, Double longitude, String language) {
-        // Set default values if not specified
-        if (language == null) {
-            language = "en";
-        }
-
-        JSONObject parkingData = GoogleServices.crawlNearbyLots(latitude, longitude, language);
+    public List<ParkingLotModel> getNearbyLots(Double latitude, Double longitude) {
+        JSONObject parkingData = GoogleServices.crawlNearbyLots(latitude, longitude, "en");
         // if place id is in the database => return it from the database.
         // handle the output and return.
         JSONArray results = parkingData.getJSONArray("results");
         
-        JSONArray parkingLots = new JSONArray();
         int size = results.length() > 10 ? 10 : results.length();
+        ArrayList<ParkingLotModel> parkingLotResponse = new ArrayList<>();
         for ( int i = 0; i < size; i++) {
             JSONObject parkingLotData = results.getJSONObject(i);
             String placeID = parkingLotData.optString("place_id");
             // if place_id exists in the database => then fetch fares, occupancy and capacity and return.
             Optional<ParkingLot> parkingLotDB = parkingLotRepository.findByPlaceId(placeID);
-            int capacity, occupancy;
-            Double lowestFare = 1000.0; // for now 
+            Integer capacity = null, occupancy = null;
+            Integer lowestFare = 1000; // for now 
             if (parkingLotDB.isPresent()) {
                 ParkingLot parkingLotEntity = parkingLotDB.get();
                 capacity = parkingLotEntity.getCapacity();
@@ -61,21 +56,34 @@ public class ParkingLotService implements IParkingLotService
                 String fares = parkingLotEntity.getFares();
                 JSONObject faresJSON = new JSONObject(fares);
                 for (String key : faresJSON.keySet()) {
-                    Double fare = faresJSON.optDouble(key);
+                    Integer fare = faresJSON.optInt(key);
                     if (fare < lowestFare) {
                         lowestFare = fare;
                     }
                 }
             }
-            else {
-                capacity = 0;
-                occupancy = 0;
-            }
 
-            JSONObject parkingLot = new JSONObject();
             String name = parkingLotData.optString("name");
             Double rating = parkingLotData.optDouble("rating", 0.0);
             JSONObject coordinates = parkingLotData.optJSONObject("geometry").optJSONObject("location");
+            LocationModel location = new LocationModel();
+            location.setLatitude(coordinates.optDouble("lat"));
+            location.setLongitude(coordinates.optDouble("lng"));
+            
+            ParkingLotModel parkingLot = new ParkingLotModel();
+            parkingLot.setName(name);
+            parkingLot.setDistance(2.5);
+            parkingLot.setRating(rating);
+            parkingLot.setPlaceID(placeID);
+            parkingLot.setCoordinates(location);
+            parkingLot.setCapacity(capacity);
+            parkingLot.setOccupancy(occupancy);
+            parkingLot.setLowestFare(lowestFare);
+            parkingLot.setImage("https://cdnuploads.aa.com.tr/uploads/Contents/2019/10/06/thumbs_b_c_0371b492b40dc268e6850ff2d1a9f968.jpg?v=134759");
+            
+            parkingLotResponse.add(parkingLot);
+
+            /* 
             parkingLot.put("name", name);
             parkingLot.put("rating", rating);
             parkingLot.put("distance", 2.5);
@@ -86,20 +94,20 @@ public class ParkingLotService implements IParkingLotService
             parkingLot.put("lowestFare", lowestFare);
             // photo will be fetched later from google photo place api.
             parkingLot.put("image", "https://cdnuploads.aa.com.tr/uploads/Contents/2019/10/06/thumbs_b_c_0371b492b40dc268e6850ff2d1a9f968.jpg?v=134759");
+            */
             
-            
-            parkingLots.put(parkingLot);
+            //parkingLots.put(parkingLot);
         }
 
-        return parkingLots;
+        return parkingLotResponse;
     }
 
     @Override
-    public JSONObject getParkingLotByPlaceID(String placeID) {
+    public ParkingLotDetailModel getParkingLotByPlaceID(String placeID) {
         Optional<ParkingLot> parkingLotDB = parkingLotRepository.findByPlaceId(placeID);
 
-        int capacity, occupancy;
-        JSONObject faresJSON = new JSONObject();
+        Integer capacity = null, occupancy = null;
+        JSONObject faresJSON = null;
         if (parkingLotDB.isPresent()) {
             ParkingLot parkingLotEntity = parkingLotDB.get();
             capacity = parkingLotEntity.getCapacity();
@@ -107,18 +115,32 @@ public class ParkingLotService implements IParkingLotService
             String fares = parkingLotEntity.getFares();
             faresJSON = new JSONObject(fares);
         }
-        else {
-            capacity = 0;
-            occupancy = 0;
+
+        JSONObject placeDetails = GoogleServices.getPlaceDetails(placeID).optJSONObject("result");
+        if (placeDetails == null) {
+            return null;
         }
 
-        JSONObject placeDetails = GoogleServices.getPlaceDetails(placeID).getJSONObject("result");
-
-        JSONObject parkingLot = new JSONObject();
         String name = placeDetails.optString("name");
         Double rating = placeDetails.optDouble("rating", 0.0);
         JSONObject coordinates = placeDetails.optJSONObject("geometry").optJSONObject("location");
 
+        LocationModel location = new LocationModel();
+        location.setLatitude(coordinates.optDouble("lat"));
+        location.setLongitude(coordinates.optDouble("lng"));
+
+        ParkingLotDetailModel parkingLotDetail = new ParkingLotDetailModel();
+        parkingLotDetail.setName(name);
+        parkingLotDetail.setRating(rating);
+        parkingLotDetail.setDistance(2.5);
+        parkingLotDetail.setPlaceID(placeID);
+        parkingLotDetail.setCoordinates(location);
+        parkingLotDetail.setCapacity(capacity);
+        parkingLotDetail.setOccupancy(occupancy);
+        parkingLotDetail.setFares(faresJSON);
+        parkingLotDetail.setImage("https://cdnuploads.aa.com.tr/uploads/Contents/2019/10/06/thumbs_b_c_0371b492b40dc268e6850ff2d1a9f968.jpg?v=134759");
+
+        /* 
         parkingLot.put("name", name);
         parkingLot.put("rating", rating);
         parkingLot.put("distance", 2.5);
@@ -129,8 +151,8 @@ public class ParkingLotService implements IParkingLotService
         parkingLot.put("fares", faresJSON);
         // photo will be fetched later from google photo place api.
         parkingLot.put("image", "https://cdnuploads.aa.com.tr/uploads/Contents/2019/10/06/thumbs_b_c_0371b492b40dc268e6850ff2d1a9f968.jpg?v=134759");
-
-        return parkingLot;
+        */
+        return parkingLotDetail;
     }
 
     @Override

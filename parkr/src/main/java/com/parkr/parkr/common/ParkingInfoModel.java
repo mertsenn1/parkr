@@ -1,4 +1,4 @@
-package com.parkr.parkr.response;
+package com.parkr.parkr.common;
 
 import java.time.LocalDateTime;
 

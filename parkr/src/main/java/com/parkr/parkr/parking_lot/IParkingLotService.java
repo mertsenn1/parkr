@@ -5,13 +5,15 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.google.gson.JsonElement;
+import com.parkr.parkr.common.ParkingLotDetailModel;
+import com.parkr.parkr.common.ParkingLotModel;
 
 
 public interface IParkingLotService
 {
-     JSONArray getNearbyLots(Double latitude, Double longitude, String language);
+     List<ParkingLotModel> getNearbyLots(Double latitude, Double longitude);
 
-     JSONObject getParkingLotByPlaceID(String placeID);
+     ParkingLotDetailModel getParkingLotByPlaceID(String placeID);
 
      ParkingLotDto getParkingLotById(Long id);
 
