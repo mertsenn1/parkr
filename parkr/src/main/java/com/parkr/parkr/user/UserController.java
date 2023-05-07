@@ -43,8 +43,7 @@ public class UserController
         return ApiResponse.ok(userService.signUp(userDto));
     }
 
-    @GetMapping("/sign-in")
-    @PreAuthorize("hasAuthority('USER')")
+    @PostMapping("/sign-in")
     public ApiResponse signIn(@RequestBody AuthenticationRequest request) {
         return ApiResponse.ok(userService.signIn(request));
     }
