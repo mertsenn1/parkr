@@ -2,7 +2,6 @@ package com.parkr.parkr.user;
 
 import java.util.List;
 
-import com.parkr.parkr.address.AddressDto;
 import com.parkr.parkr.car.CarDto;
 import lombok.Builder;
 import lombok.Data;
@@ -22,8 +21,6 @@ public class UserDto
     private String phone;
 
     private String type;
-
-    private AddressDto address;
 
     private List<CarDto> cars;
 

@@ -1,14 +1,21 @@
 package com.parkr.parkr.user;
 
-import com.parkr.parkr.address.Address;
-import com.parkr.parkr.address.AddressDto;
-import com.parkr.parkr.address.IAddressService;
 import com.parkr.parkr.auth.AuthenticationRequest;
 import com.parkr.parkr.auth.AuthenticationResponse;
 import com.parkr.parkr.car.Car;
 import com.parkr.parkr.car.CarDto;
 import com.parkr.parkr.car.ICarService;
+import com.parkr.parkr.common.LocationModel;
+import com.parkr.parkr.common.ParkingInfoModel;
+import com.parkr.parkr.common.ParkingLotDetailModel;
+import com.parkr.parkr.common.ParkingLotModel;
+import com.parkr.parkr.common.RecentParkingLotModel;
 import com.parkr.parkr.config.JwtService;
+import com.parkr.parkr.lot_summary.LotSummary;
+import com.parkr.parkr.lot_summary.LotSummaryRepository;
+import com.parkr.parkr.parking_lot.IParkingLotService;
+import com.parkr.parkr.parking_lot.ParkingLot;
+import com.parkr.parkr.parking_lot.ParkingLotRepository;
 import com.parkr.parkr.token.Token;
 import com.parkr.parkr.token.TokenRepository;
 import com.parkr.parkr.token.TokenType;
@@ -18,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -31,9 +39,11 @@ import java.util.Optional;
 public class UserService implements IUserService
 {
     private final UserRepository userRepository;
+    private final ParkingLotRepository parkingLotRepository;
+    private final LotSummaryRepository lotSummaryRepository;
     private final TokenRepository tokenRepository;
-    private final IAddressService addressService;
     private final ICarService carService;
+    private final IParkingLotService parkingLotService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -78,20 +88,14 @@ public class UserService implements IUserService
     @Override
     public AuthenticationResponse signUp(UserDto userDto)
     {
-        AddressDto addressDto = userDto.getAddress(); 
-        List<CarDto> carDtos = userDto.getCars();
-
         //User user;
         AuthenticationResponse response;
         try
         {
-            Address address = addressService.saveAddress(addressDto);
-            if (address == null)
-                throw new Exception();
 
             //user = userRepository.save(convertToUser(userDto, address));
 
-            response = register(userDto, address, carDtos);
+            response = register(userDto);
 
             /* 
             if (carDtos != null) {
@@ -112,23 +116,89 @@ public class UserService implements IUserService
         return response;
     }
 
-    private AuthenticationResponse register(UserDto request, Address address, List<CarDto> carDtos){
+    @Override
+    public List<ParkingInfoModel> getCurrentParkingData() {
+        
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        System.out.println(currentUser.getId());
+
+        List<LotSummary> summaryList = lotSummaryRepository.getCurrentLotSummariesOfUser(currentUser.getId());
+
+        ArrayList<ParkingInfoModel> responseList = new ArrayList<>();
+        summaryList.forEach(summary -> {
+            ParkingInfoModel responseModel = new ParkingInfoModel();
+            responseModel.setId(summary.getId());
+            responseModel.setName(summary.getParkingLot().getName());
+            responseModel.setFee(summary.getFee());
+            responseModel.setStartTime(summary.getStartTime());
+
+            responseList.add(responseModel);
+        });
+        return responseList;
+    }
+
+    @Override
+    public List<ParkingInfoModel> getPastParkingData() {
+        
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        System.out.println(currentUser.getId());
+
+        List<LotSummary> summaryList = lotSummaryRepository.getPastLotSummariesOfUser(currentUser.getId());
+
+        ArrayList<ParkingInfoModel> responseList = new ArrayList<>();
+        summaryList.forEach(summary -> {
+            ParkingInfoModel responseModel = new ParkingInfoModel();
+            responseModel.setId(summary.getId());
+            responseModel.setName(summary.getParkingLot().getName());
+            responseModel.setFee(null);
+            responseModel.setStartTime(summary.getStartTime());
+
+            responseList.add(responseModel);
+        });
+        return responseList;
+    }
+
+    @Override
+    public List<RecentParkingLotModel> getRecentParkingData() {
+        
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        System.out.println(currentUser.getId());
+
+        List<LotSummary> summaryList = lotSummaryRepository.getRecentLotSummaries(currentUser.getId());
+
+        // lot summaries => parking lot id'ler => place_id'den al.
+        ArrayList<RecentParkingLotModel> responseList = new ArrayList<>();
+        summaryList.forEach(summary -> {
+            ParkingLot parkingLot = parkingLotRepository.findById(summary.getParkingLot().getId()).get();
+
+            ParkingLotDetailModel parkingLotDetail = parkingLotService.getParkingLotByPlaceID(parkingLot.getPlaceId());
+            RecentParkingLotModel responseModel = new RecentParkingLotModel();
+            // for every summary => get place_id from parking lot id => request to google... get data for each place.
+
+            responseModel.setName(parkingLotDetail.getName());
+            responseModel.setDistance(2.5);
+            responseModel.setRating(parkingLotDetail.getRating());
+            responseModel.setPlaceID(parkingLotDetail.getPlaceID());
+            responseModel.setCoordinates(parkingLotDetail.getCoordinates());
+
+            responseList.add(responseModel);
+        });
+
+        return responseList;
+    }
+
+    private AuthenticationResponse register(UserDto request){
         User user = new User();
         user.setMail(request.getMail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setName(request.getName());
         user.setPhone(request.getPhone());
         user.setRole(Role.USER);
-        user.setTokentType(TokenType.BEARER);
+        user.setTokenType(TokenType.BEARER);
         User savedUser = userRepository.save(user);
         String jwtToken = jwtService.generateToken(user);
         saveUserToken(savedUser, jwtToken);
 
-        if (carDtos != null) {
-            carDtos.forEach(carDto -> {
-                carService.saveCar(carDto, user.getId());
-            });
-        }
         return AuthenticationResponse.builder()
         .token(jwtToken)
         .build();
@@ -193,7 +263,7 @@ public class UserService implements IUserService
         return carDtos;
     }
     
-    private User convertToUser(UserDto userDto, Address address) {
+    private User convertToUser(UserDto userDto) {
         return new User(null, userDto.getMail(), userDto.getName(),
                 userDto.getPassword(), userDto.getPhone(),
                 null, null, userDto.getRole());

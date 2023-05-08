@@ -1,16 +1,12 @@
 package com.parkr.parkr.parking_lot;
 
 import com.google.gson.JsonElement;
-import com.parkr.parkr.address.Address;
-import com.parkr.parkr.address.AddressDto;
-import com.parkr.parkr.address.IAddressService;
+
 import com.parkr.parkr.common.GoogleServices;
 import com.parkr.parkr.common.LocationModel;
 import com.parkr.parkr.common.ParkingLotDetailModel;
 import com.parkr.parkr.common.ParkingLotModel;
-import com.parkr.parkr.location.ILocationService;
-import com.parkr.parkr.location.Location;
-import com.parkr.parkr.location.LocationDto;
+
 import com.parkr.parkr.user.User;
 import com.parkr.parkr.user.UserRepository;
 
