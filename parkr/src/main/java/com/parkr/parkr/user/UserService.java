@@ -108,6 +108,7 @@ public class UserService implements IUserService
             log.info("Error occurred while saving the user: {} with mail: {} error: {}", userDto.getName(), userDto.getMail(), ex.getMessage());
             return null;
         }
+        System.out.println("Token response: " + response);
         return response;
     }
 
