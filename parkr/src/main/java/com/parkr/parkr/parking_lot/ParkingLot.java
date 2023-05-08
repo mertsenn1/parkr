@@ -1,7 +1,5 @@
 package com.parkr.parkr.parking_lot;
 
-import com.parkr.parkr.address.Address;
-import com.parkr.parkr.location.Location;
 import com.parkr.parkr.user.User;
 
 import jakarta.persistence.*;

@@ -1,8 +1,5 @@
 package com.parkr.parkr.parking_lot;
 
-import com.parkr.parkr.address.AddressDto;
-import com.parkr.parkr.location.LocationDto;
-
 import lombok.Builder;
 import lombok.Data;
 

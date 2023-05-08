@@ -73,46 +73,4 @@ public class LotSummaryService implements  ILotSummaryService{
         LotSummary lotSummary = modelMapper.map(lotSummaryDto, LotSummary.class);
         return lotSummary;
     }
-
-    @Override
-    public List<ParkingInfoModel> getCurrentParkingData() {
-        
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        System.out.println(currentUser.getId());
-
-        List<LotSummary> summaryList = lotSummaryRepository.getCurrentLotSummariesOfUser(currentUser.getId());
-
-        ArrayList<ParkingInfoModel> responseList = new ArrayList<>();
-        summaryList.forEach(summary -> {
-            ParkingInfoModel responseModel = new ParkingInfoModel();
-            responseModel.setId(summary.getId());
-            responseModel.setName(summary.getParkingLot().getName());
-            responseModel.setFee(summary.getFee());
-            responseModel.setStartTime(summary.getStartTime());
-
-            responseList.add(responseModel);
-        });
-        return responseList;
-    }
-
-    @Override
-    public List<ParkingInfoModel> getPastParkingData() {
-        
-        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        System.out.println(currentUser.getId());
-
-        List<LotSummary> summaryList = lotSummaryRepository.getPastLotSummariesOfUser(currentUser.getId());
-
-        ArrayList<ParkingInfoModel> responseList = new ArrayList<>();
-        summaryList.forEach(summary -> {
-            ParkingInfoModel responseModel = new ParkingInfoModel();
-            responseModel.setId(summary.getId());
-            responseModel.setName(summary.getParkingLot().getName());
-            responseModel.setFee(null);
-            responseModel.setStartTime(summary.getStartTime());
-
-            responseList.add(responseModel);
-        });
-        return responseList;
-    }
 }

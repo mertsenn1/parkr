@@ -9,7 +9,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.parkr.parkr.address.Address;
 import com.parkr.parkr.parking_lot.ParkingLot;
 import com.parkr.parkr.token.Token;
 import com.parkr.parkr.token.TokenType;
@@ -57,8 +56,7 @@ public class User implements UserDetails
     List<ParkingLot> parkingLots;
 
     @Enumerated(EnumType.STRING)
-    private TokenType tokentType;
-
+    private TokenType tokenType;
 
     @Enumerated(EnumType.STRING)
     private Role role;

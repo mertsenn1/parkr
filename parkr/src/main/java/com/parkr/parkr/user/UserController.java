@@ -29,13 +29,19 @@ public class UserController
     @GetMapping("/current-parking")
     @PreAuthorize("hasAuthority('USER')")
     public ApiResponse getCurrentParkingData() {
-        return ApiResponse.ok(lotSummaryService.getCurrentParkingData());
+        return ApiResponse.ok(userService.getCurrentParkingData());
     }
 
     @GetMapping("/past-parking")
     @PreAuthorize("hasAuthority('USER')")
     public ApiResponse getPastParkingData() {
-        return ApiResponse.ok(lotSummaryService.getPastParkingData());
+        return ApiResponse.ok(userService.getPastParkingData());
+    }
+
+    @GetMapping("/recent")
+    @PreAuthorize("hasAuthority('USER')")
+    public ApiResponse getRecentParkingData() {
+        return ApiResponse.ok(userService.getRecentParkingData());
     }
 
     @PostMapping("/sign-up")
