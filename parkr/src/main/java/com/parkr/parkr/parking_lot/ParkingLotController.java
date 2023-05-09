@@ -2,6 +2,7 @@ package com.parkr.parkr.parking_lot;
 
 import com.parkr.parkr.common.ApiResponse;
 import com.parkr.parkr.common.LocationModel;
+import com.parkr.parkr.common.ParkingLotOperationModel;
 import com.parkr.parkr.common.PlaceDetailRequestModel;
 
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,18 @@ public class ParkingLotController
     @PreAuthorize("hasAuthority('USER')")
     public ApiResponse getPlaceDetails(@RequestBody PlaceDetailRequestModel place) {
         return ApiResponse.ok(parkingLotService.getParkingLotByPlaceID(place.getPlaceID()));
+    }
+
+    @PostMapping(value = "/entry")
+    public ApiResponse enterParkingLot(@RequestBody ParkingLotOperationModel entryInfo) {
+        parkingLotService.enterParkingLot(entryInfo.getLicensePlate(), entryInfo.getParkingLotID());
+        return ApiResponse.ok();
+    }
+
+    @PostMapping(value = "/exit")
+    public ApiResponse exitParkingLot(@RequestBody ParkingLotOperationModel exitInfo) {
+        parkingLotService.exitParkingLot(exitInfo.getLicensePlate(), exitInfo.getParkingLotID());
+        return ApiResponse.ok();
     }
 
     @GetMapping("{id}")

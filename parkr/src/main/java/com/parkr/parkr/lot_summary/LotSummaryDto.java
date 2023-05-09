@@ -4,13 +4,18 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.parkr.parkr.car.Car;
 import com.parkr.parkr.parking_lot.ParkingLot;
 import com.parkr.parkr.user.User;
+
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Data
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class LotSummaryDto {
     private Long id;
 
