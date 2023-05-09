@@ -1,18 +1,22 @@
 package com.parkr.parkr.parking_lot;
 
 import com.google.gson.JsonElement;
-
+import com.parkr.parkr.car.Car;
+import com.parkr.parkr.car.CarRepository;
 import com.parkr.parkr.common.GoogleServices;
 import com.parkr.parkr.common.LocationModel;
 import com.parkr.parkr.common.ParkingLotDetailModel;
 import com.parkr.parkr.common.ParkingLotModel;
-
+import com.parkr.parkr.lot_summary.LotSummaryDto;
+import com.parkr.parkr.lot_summary.LotSummaryRepository;
+import com.parkr.parkr.lot_summary.LotSummaryService;
 import com.parkr.parkr.user.User;
 import com.parkr.parkr.user.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -28,6 +32,9 @@ public class ParkingLotService implements IParkingLotService
 {
 
     private final ParkingLotRepository parkingLotRepository;
+    private final CarRepository carRepository;
+    private final LotSummaryRepository lotSummaryRepository;
+    private final LotSummaryService lotSummaryService;
 
     @Override
     public List<ParkingLotModel> getNearbyLots(Double latitude, Double longitude) {
@@ -149,6 +156,93 @@ public class ParkingLotService implements IParkingLotService
         parkingLot.put("image", "https://cdnuploads.aa.com.tr/uploads/Contents/2019/10/06/thumbs_b_c_0371b492b40dc268e6850ff2d1a9f968.jpg?v=134759");
         */
         return parkingLotDetail;
+    }
+
+    @Override
+    public void enterParkingLot(String plate, Long parkingLotID) {
+        // insert a data to lot_summary
+        // get the parking lot and the car from parkingLotID and from the plate.
+        Optional<ParkingLot> parkingLot = parkingLotRepository.findById(parkingLotID);
+        if (!parkingLot.isPresent()) {
+            log.error("Parking Lot with the id: {} could not be found", parkingLotID);
+            return;
+        }
+        Optional<Car> car = carRepository.findByPlate(plate);
+        if (!car.isPresent()) {
+            log.error("Car with the plate: {} could not be found", plate);
+            return;
+        }
+
+        // check if already exists
+        Long lotSummaryID = lotSummaryRepository.getExistingLotSummary(car.get().getId(), parkingLotID);
+        if (lotSummaryID != null) {
+            log.error("Car with id {} is already in parking lot with id: {}", car.get().getId(), parkingLotID);
+            return;
+        }
+        
+        try {
+            // increase the occupancy of parking lot by one
+            parkingLotRepository.increaseParkingLotOccupancy(parkingLotID);
+        } catch (Exception e) {
+            log.error("Parking Lot occupany could not be increased. CarID: {}, parkingLotID: {}", car.get().getId(), parkingLotID);
+        }
+
+        // create a clock
+        ZoneId zid = ZoneId.of("Europe/Istanbul");
+        LocalDateTime lt = LocalDateTime.now(zid);
+
+        LotSummaryDto lotSummaryDto = new LotSummaryDto();
+        lotSummaryDto.setStartTime(lt);
+        lotSummaryDto.setEndTime(null);
+        lotSummaryDto.setFee(0);
+        lotSummaryDto.setParkingLot(parkingLot.get());
+        lotSummaryDto.setCar(car.get());
+
+        try {
+            lotSummaryService.saveLotSummary(lotSummaryDto);
+            log.info("Car with plate {} has entered to parking lot with id {}", plate, parkingLotID);
+        } catch (Exception e) {
+            log.error("Error while Car with plate {} entering parking lot with id {}", plate, parkingLotID);
+        }
+    }
+
+    @Override
+    public void exitParkingLot(String plate, Long parkingLotID) {
+        // update the end_time of lot summary entry.
+        Optional<ParkingLot> parkingLot = parkingLotRepository.findById(parkingLotID);
+        if (!parkingLot.isPresent()) {
+            log.error("Parking Lot with the id: {} could not be found", parkingLotID);
+            return;
+        }
+        Optional<Car> car = carRepository.findByPlate(plate);
+        if (!car.isPresent()) {
+            log.error("Car with the plate: {} could not be found", plate);
+            return;
+        }
+
+        Long lotSummaryID = lotSummaryRepository.getExistingLotSummary(car.get().getId(), parkingLotID);
+        if (lotSummaryID == null) {
+            log.error("Car with id {} is not in parking lot with id: {}", car.get().getId(), parkingLotID);
+            return;
+        }
+
+        try {
+            // decrease the occupancy of parking lot by one
+            parkingLotRepository.decreaseParkingLotOccupancy(parkingLotID);
+        } catch (Exception e) {
+            log.error("Parking Lot occupany could not be decreased. CarID: {}, parkingLotID: {}", car.get().getId(), parkingLotID);
+        }
+
+        // create a clock
+        ZoneId zid = ZoneId.of("Europe/Istanbul");
+  
+        // create a LocalDateTime object using now(zoneId)
+        LocalDateTime lt = LocalDateTime.now(zid);
+        try {
+            lotSummaryRepository.updateEndTime(lt, car.get().getId());
+        } catch (Exception e) {
+            log.error("Error while Car with id {} exiting parking lot with id {}", car.get().getId(), parkingLotID);
+        }
     }
 
     @Override

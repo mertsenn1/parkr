@@ -22,4 +22,7 @@ public interface IParkingLotService
      ParkingLot saveParkingLot(ParkingLotDto parkingLotDto);
 
      void deleteParkingLot(Long id);
+
+     void enterParkingLot(String plate, Long parkingLotID);
+     void exitParkingLot(String plate, Long parkingLotID);
 }
