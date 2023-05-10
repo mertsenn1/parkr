@@ -20,8 +20,6 @@ public class UserDto
 
     private String phone;
 
-    private String type;
-
     private List<CarDto> cars;
 
     private Role role;
