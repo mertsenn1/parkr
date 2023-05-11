@@ -20,19 +20,19 @@ public class CarController
     private final ICarService carService;
 
     @GetMapping("{id}")
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAuthority('USER') or hasAuthority('ADMIN')")
     public ApiResponse getCarById(@PathVariable Long id) {
         return ApiResponse.ok(carService.getCarById(id));
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('LOT_OWNER')")
+    @PreAuthorize("hasAuthority('LOT_OWNER') or hasAuthority('ADMIN')")
     public ApiResponse getAllCars() {
         return ApiResponse.ok(carService.getAllCars());
     }
 
     @PostMapping(value = "fuel")
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAuthority('USER') or hasAuthority('ADMIN')")
     public ApiResponse getFuelLiter(@RequestBody String json) {
         JSONObject jsonObject = new JSONObject(json);
         Double originLatitude = jsonObject.getDouble("originLatitude");
@@ -47,13 +47,13 @@ public class CarController
 
 
     @PostMapping()
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAuthority('USER') or hasAuthority('LOT_OWNER') or hasAuthority('ADMIN')")
     public ApiResponse saveCar(@RequestBody CarDto carDto) {
         return ApiResponse.ok(carService.saveCar(carDto, carDto.getUserId()));
     }
 
     @DeleteMapping("{id}")
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAuthority('USER') or hasAuthority('ADMIN')")
     public ResponseEntity<Void> deleteCar(@PathVariable Long id) {
         carService.deleteCar(id);
         return new ResponseEntity<Void>(HttpStatus.OK);
