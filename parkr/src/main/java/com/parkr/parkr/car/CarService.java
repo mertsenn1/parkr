@@ -5,8 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.parkr.parkr.common.CarUpdateOperationModel;
 import com.parkr.parkr.common.GoogleServices;
 import com.parkr.parkr.user.User;
 import com.parkr.parkr.user.UserRepository;
@@ -65,6 +67,24 @@ public class CarService implements ICarService
     }
 
     @Override
+    public Car updateCar(CarUpdateOperationModel carModel)
+    {
+        Optional<Car> car = carRepository.findById(carModel.getId());
+
+        if (car.isEmpty()) return null;
+
+        
+
+        Car newCar = convertToCar(carModel, car.get().getUser());
+        newCar.setId(carModel.getId());
+        Car updatedCar = carRepository.save(newCar);
+
+        log.info("Car is updated with id: {}", updatedCar.getId());
+
+        return updatedCar;
+    }
+
+    @Override
     public void deleteCar(Long id){
         Optional<Car> lotSummary = carRepository.findById(id);
         if (!lotSummary.isPresent()) throw new CarNotFoundException("Car couldn't found by id: " + id);
@@ -118,10 +138,15 @@ public class CarService implements ICarService
                 .carType(car.getCarType())
                 .model(car.getModel())
                 .fuelType(car.getFuelType())
+                .userId(((User)SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getId())
                 .build();
     }
 
     private Car convertToCar(CarDto carDto, User user) {
         return new Car(null, carDto.getPlate(), carDto.getCarType(), carDto.getModel(), carDto.getFuelType(), user);
+    }
+
+    private Car convertToCar(CarUpdateOperationModel carModel, User user) {
+        return new Car(null, carModel.getPlate(), carModel.getCarType(), carModel.getModel(), carModel.getFuelType(), user);
     }
 }

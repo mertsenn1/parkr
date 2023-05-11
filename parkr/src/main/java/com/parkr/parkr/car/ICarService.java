@@ -2,6 +2,8 @@ package com.parkr.parkr.car;
 
 import java.util.List;
 
+import com.parkr.parkr.common.CarUpdateOperationModel;
+
 public interface ICarService
 {
     CarDto getCarById(Long id);
@@ -9,6 +11,8 @@ public interface ICarService
     List<CarDto> getAllCars();
 
     Car saveCar(CarDto carDto, Long userId);
+
+    Car updateCar(CarUpdateOperationModel carModel);
 
     void deleteCar(Long id);
 

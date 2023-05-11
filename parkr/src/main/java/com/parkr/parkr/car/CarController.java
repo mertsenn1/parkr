@@ -1,6 +1,7 @@
 package com.parkr.parkr.car;
 
 import com.parkr.parkr.common.ApiResponse;
+import com.parkr.parkr.common.CarUpdateOperationModel;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
@@ -46,10 +47,16 @@ public class CarController
     }
 
 
-    @PostMapping()
+    @PostMapping("/add-vehicle")
     @PreAuthorize("hasAuthority('USER') or hasAuthority('LOT_OWNER') or hasAuthority('ADMIN')")
     public ApiResponse saveCar(@RequestBody CarDto carDto) {
         return ApiResponse.ok(carService.saveCar(carDto, carDto.getUserId()));
+    }
+
+    @PutMapping("/edit-vehicle")
+    @PreAuthorize("hasAuthority('USER') or hasAuthority('LOT_OWNER') or hasAuthority('ADMIN')")
+    public ApiResponse updateCar(@RequestBody CarUpdateOperationModel carModel) {
+        return ApiResponse.ok(carService.updateCar(carModel));
     }
 
     @DeleteMapping("{id}")
