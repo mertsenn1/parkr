@@ -150,7 +150,7 @@ public class UserService implements IUserService
             ParkingInfoModel responseModel = new ParkingInfoModel();
             responseModel.setId(summary.getId());
             responseModel.setName(summary.getParkingLot().getName());
-            responseModel.setFee(null);
+            responseModel.setFee(summary.getFee());
             responseModel.setStartTime(summary.getStartTime());
 
             responseList.add(responseModel);
@@ -160,7 +160,6 @@ public class UserService implements IUserService
 
     @Override
     public List<RecentParkingLotModel> getRecentParkingData() {
-        
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         System.out.println(currentUser.getId());
 
@@ -169,7 +168,17 @@ public class UserService implements IUserService
         // lot summaries => parking lot id'ler => place_id'den al.
         ArrayList<RecentParkingLotModel> responseList = new ArrayList<>();
         summaryList.forEach(summary -> {
-            ParkingLot parkingLot = parkingLotRepository.findById(summary.getParkingLot().getId()).get();
+            ParkingLot parkingLot = summary.getParkingLot();
+            boolean duplicate = false;
+            // there should be no duplicate in response list.
+            for (RecentParkingLotModel model : responseList) {
+                if (model.getPlaceID().equals(parkingLot.getPlaceId())) {
+                    duplicate = true;
+                }
+            }
+            if (duplicate) {
+                return; // skip this iteration. it is like continue in a for loop.
+            }
 
             ParkingLotDetailModel parkingLotDetail = parkingLotService.getParkingLotByPlaceID(parkingLot.getPlaceId());
             RecentParkingLotModel responseModel = new RecentParkingLotModel();
@@ -178,6 +187,8 @@ public class UserService implements IUserService
             responseModel.setName(parkingLotDetail.getName());
             responseModel.setDistance(2.5);
             responseModel.setRating(parkingLotDetail.getRating());
+            responseModel.setNumOfRatings(parkingLotDetail.getNumOfRatings());
+            responseModel.setImage(parkingLotDetail.getImage());
             responseModel.setPlaceID(parkingLotDetail.getPlaceID());
             responseModel.setCoordinates(parkingLotDetail.getCoordinates());
 
