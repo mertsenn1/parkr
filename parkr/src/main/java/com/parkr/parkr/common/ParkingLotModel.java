@@ -12,6 +12,8 @@ import lombok.NoArgsConstructor;
 public class ParkingLotModel {
     private String name;
     private Double rating;
+    private Integer numOfRatings;
+    private String status;
     private Double distance;
     private String placeID;
     private LocationModel coordinates;

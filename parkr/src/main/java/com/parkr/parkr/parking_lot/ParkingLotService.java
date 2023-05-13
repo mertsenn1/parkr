@@ -17,9 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -51,23 +49,39 @@ public class ParkingLotService implements IParkingLotService
             // if place_id exists in the database => then fetch fares, occupancy and capacity and return.
             Optional<ParkingLot> parkingLotDB = parkingLotRepository.findByPlaceId(placeID);
             Integer capacity = null, occupancy = null;
-            Integer lowestFare = 1000; // for now 
+            Integer lowestFare = null;
+            String name = null;
+            String image = null;
             if (parkingLotDB.isPresent()) {
                 ParkingLot parkingLotEntity = parkingLotDB.get();
+                name = parkingLotEntity.getName();
+                image = parkingLotEntity.getPhotoUrl();
                 capacity = parkingLotEntity.getCapacity();
                 occupancy = parkingLotEntity.getOccupancy();
                 String fares = parkingLotEntity.getFares();
-                JSONObject faresJSON = new JSONObject(fares);
-                for (String key : faresJSON.keySet()) {
-                    Integer fare = faresJSON.optInt(key);
-                    if (fare < lowestFare) {
-                        lowestFare = fare;
+                if (fares.equalsIgnoreCase("free")) {
+                    // this is a free parking lot
+                    lowestFare = 0;
+                }
+                else {
+                    // fares should be in the correct JSONObject format in the database.
+                    JSONObject faresJSON = new JSONObject(fares);
+                    lowestFare = 1000;
+                    for (String key : faresJSON.keySet()) {
+                        Integer fare = faresJSON.optInt(key);
+                        if (fare == 0) continue;
+                        if (fare < lowestFare) {
+                            lowestFare = fare;
+                        }
                     }
                 }
             }
 
-            String name = parkingLotData.optString("name");
+            name = name == null ? parkingLotData.optString("name") : name;
+            image = image == null ? "https://cdnuploads.aa.com.tr/uploads/Contents/2019/10/06/thumbs_b_c_0371b492b40dc268e6850ff2d1a9f968.jpg?v=134759" : image;
             Double rating = parkingLotData.optDouble("rating", 0.0);
+            String status = parkingLotData.optString("business_status");
+            int numOfRatings = parkingLotData.optInt("user_ratings_total", 0);
             JSONObject coordinates = parkingLotData.optJSONObject("geometry").optJSONObject("location");
             LocationModel location = new LocationModel();
             location.setLatitude(coordinates.optDouble("lat"));
@@ -76,30 +90,17 @@ public class ParkingLotService implements IParkingLotService
             ParkingLotModel parkingLot = new ParkingLotModel();
             parkingLot.setName(name);
             parkingLot.setDistance(2.5);
+            parkingLot.setStatus(status);
             parkingLot.setRating(rating);
+            parkingLot.setNumOfRatings(numOfRatings);
             parkingLot.setPlaceID(placeID);
             parkingLot.setCoordinates(location);
             parkingLot.setCapacity(capacity);
             parkingLot.setOccupancy(occupancy);
             parkingLot.setLowestFare(lowestFare);
-            parkingLot.setImage("https://cdnuploads.aa.com.tr/uploads/Contents/2019/10/06/thumbs_b_c_0371b492b40dc268e6850ff2d1a9f968.jpg?v=134759");
+            parkingLot.setImage(image);
             
             parkingLotResponse.add(parkingLot);
-
-            /* 
-            parkingLot.put("name", name);
-            parkingLot.put("rating", rating);
-            parkingLot.put("distance", 2.5);
-            parkingLot.put("placeID", placeID);
-            parkingLot.put("coordinates", coordinates);
-            parkingLot.put("capacity", capacity);
-            parkingLot.put("occupancy", occupancy);
-            parkingLot.put("lowestFare", lowestFare);
-            // photo will be fetched later from google photo place api.
-            parkingLot.put("image", "https://cdnuploads.aa.com.tr/uploads/Contents/2019/10/06/thumbs_b_c_0371b492b40dc268e6850ff2d1a9f968.jpg?v=134759");
-            */
-            
-            //parkingLots.put(parkingLot);
         }
 
         return parkingLotResponse;
@@ -111,12 +112,21 @@ public class ParkingLotService implements IParkingLotService
 
         Integer capacity = null, occupancy = null;
         JSONObject faresJSON = null;
+        String name = null, image = null;
+        String fares = null;
         if (parkingLotDB.isPresent()) {
             ParkingLot parkingLotEntity = parkingLotDB.get();
+            name = parkingLotEntity.getName();
+            image = parkingLotEntity.getPhotoUrl();
             capacity = parkingLotEntity.getCapacity();
             occupancy = parkingLotEntity.getOccupancy();
-            String fares = parkingLotEntity.getFares();
-            faresJSON = new JSONObject(fares);
+            fares = parkingLotEntity.getFares();
+            if (fares.equalsIgnoreCase("free")) {
+                faresJSON = new JSONObject();
+            }
+            else {
+                faresJSON = new JSONObject(fares);
+            }
         }
 
         JSONObject placeDetails = GoogleServices.getPlaceDetails(placeID).optJSONObject("result");
@@ -124,38 +134,56 @@ public class ParkingLotService implements IParkingLotService
             return null;
         }
 
-        String name = placeDetails.optString("name");
+        name = name == null ? placeDetails.optString("name") : name;
+        image = image == null ? "https://cdnuploads.aa.com.tr/uploads/Contents/2019/10/06/thumbs_b_c_0371b492b40dc268e6850ff2d1a9f968.jpg?v=134759" : image;
         Double rating = placeDetails.optDouble("rating", 0.0);
+        String status = placeDetails.optString("business_status");
+        int numOfRatings = placeDetails.optInt("user_ratings_total", 0);
         JSONObject coordinates = placeDetails.optJSONObject("geometry").optJSONObject("location");
 
+        HashMap<String, Object> faresMap = faresJSON == null ? null : (HashMap<String, Object>) faresJSON.toMap();
+        if (faresMap != null && !faresMap.isEmpty()) {
+            // since map and JSONObject are unordered types, we will sort the fares and send to the frontend.
+            faresMap = sortFares(faresMap);
+        }
         LocationModel location = new LocationModel();
         location.setLatitude(coordinates.optDouble("lat"));
         location.setLongitude(coordinates.optDouble("lng"));
 
         ParkingLotDetailModel parkingLotDetail = new ParkingLotDetailModel();
         parkingLotDetail.setName(name);
+        parkingLotDetail.setStatus(status);
         parkingLotDetail.setRating(rating);
+        parkingLotDetail.setNumOfRatings(numOfRatings);
         parkingLotDetail.setDistance(2.5);
         parkingLotDetail.setPlaceID(placeID);
         parkingLotDetail.setCoordinates(location);
         parkingLotDetail.setCapacity(capacity);
         parkingLotDetail.setOccupancy(occupancy);
-        parkingLotDetail.setFares(faresJSON);
-        parkingLotDetail.setImage("https://cdnuploads.aa.com.tr/uploads/Contents/2019/10/06/thumbs_b_c_0371b492b40dc268e6850ff2d1a9f968.jpg?v=134759");
+        parkingLotDetail.setFares(faresMap == null ? null : faresMap);
+        parkingLotDetail.setImage(image);
 
-        /* 
-        parkingLot.put("name", name);
-        parkingLot.put("rating", rating);
-        parkingLot.put("distance", 2.5);
-        parkingLot.put("placeID", placeID);
-        parkingLot.put("coordinates", coordinates);
-        parkingLot.put("capacity", capacity);
-        parkingLot.put("occupancy", occupancy);
-        parkingLot.put("fares", faresJSON);
-        // photo will be fetched later from google photo place api.
-        parkingLot.put("image", "https://cdnuploads.aa.com.tr/uploads/Contents/2019/10/06/thumbs_b_c_0371b492b40dc268e6850ff2d1a9f968.jpg?v=134759");
-        */
         return parkingLotDetail;
+    }
+
+    private LinkedHashMap<String, Object> sortFares(HashMap<String, Object> faresMap) {
+        List<Map.Entry<String, Object>> list = new LinkedList<Map.Entry<String, Object>>(faresMap.entrySet());
+    
+        // Sort the list
+        Collections.sort(list, new Comparator<Map.Entry<String, Object> >() {
+            public int compare(Map.Entry<String, Object> o1,
+                                Map.Entry<String, Object> o2)
+            {
+                return ((Integer) o1.getValue() < (Integer) o2.getValue() ? -1 : 1);
+            }
+        });
+
+        // put data from sorted list to hashmap
+        LinkedHashMap<String, Object> sortedFaresMap = new LinkedHashMap<String, Object>();
+        for (Map.Entry<String, Object> fare : list) {
+            sortedFaresMap.put(fare.getKey(), fare.getValue());
+        }
+        return sortedFaresMap;
     }
 
     @Override
