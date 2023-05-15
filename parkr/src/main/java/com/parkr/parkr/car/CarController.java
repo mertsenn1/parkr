@@ -65,4 +65,8 @@ public class CarController
         carService.deleteCar(id);
         return new ResponseEntity<Void>(HttpStatus.OK);
     }
+    @ExceptionHandler({CarNotFoundException.class})
+    public ResponseEntity<?> handleException(CarNotFoundException e) {
+        return new ResponseEntity<> (e.getMessage(), HttpStatus.NOT_FOUND);
+    }
 }

@@ -5,6 +5,7 @@ import com.parkr.parkr.common.ApiResponse;
 import com.parkr.parkr.lot_summary.ILotSummaryService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.ConstraintViolationException;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
@@ -61,5 +62,10 @@ public class UserController
     public ResponseEntity<Void> deleteLotSummary(@PathVariable Long id) {
         userService.deleteUser(id);
         return new ResponseEntity<Void>(HttpStatus.OK);
+    }
+
+    @ExceptionHandler({UserNotFoundException.class})
+    public ResponseEntity<?> handleException(UserNotFoundException e) {
+        return new ResponseEntity<> (e.getMessage(), HttpStatus.NOT_FOUND);
     }
 }

@@ -13,12 +13,13 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-@EnableMethodSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final AuthenticationProvider authenticationProvider;
@@ -34,6 +35,14 @@ public class SecurityConfiguration {
         .anyRequest()
         .authenticated()
         .and()
+        /* 
+        .exceptionHandling()
+        .authenticationEntryPoint((request, response, authException) -> 
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User is not authenticated"))
+        .accessDeniedHandler((request, response, accessDeniedException) -> 
+            response.sendError(HttpServletResponse.SC_FORBIDDEN, "User is not authorized for the following request"))
+        .and()
+        */
         .sessionManagement()
         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         .and()
