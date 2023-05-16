@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.HttpClientErrorException.Unauthorized;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.google.api.gax.rpc.UnauthenticatedException;
 
 import jakarta.validation.ConstraintViolationException;
@@ -37,6 +38,16 @@ public class GlobalExceptionHandler {
             .map(objectError -> objectError.getDefaultMessage())
             .collect(Collectors.joining(", ")), 
             HttpStatus.BAD_REQUEST);
+    }
+    
+    @ExceptionHandler({NullPointerException.class})
+    public ResponseEntity<?> handleNullPointerException(NullPointerException e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler({JsonParseException.class})
+    public ResponseEntity<?> handleJsonParseException(JsonParseException e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
     }
 }
 
