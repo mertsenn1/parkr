@@ -34,6 +34,7 @@ public class User implements UserDetails
 
     @Column(name = "mail", unique = true)
     @Email(message = "Please provide a valid email", regexp = "^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$")
+    @NotBlank(message = "Email is required")
     private String mail;
 
     @NotBlank(message = "Name is required")
@@ -59,6 +60,7 @@ public class User implements UserDetails
     private TokenType tokenType;
 
     @Enumerated(EnumType.STRING)
+    @NonNull
     private Role role;
 
     @Override

@@ -1,5 +1,6 @@
 package com.parkr.parkr.common;
 
+import java.sql.SQLException;
 import java.util.stream.Collectors;
 
 
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.HttpClientErrorException.Unauthorized;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.google.api.gax.rpc.UnauthenticatedException;
 
 import jakarta.validation.ConstraintViolationException;
@@ -28,7 +30,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({DataIntegrityViolationException.class})
     public ResponseEntity<?> handleDataIntegrityViolationException(DataIntegrityViolationException e) {
-        return new ResponseEntity<>("Invalid data provided", HttpStatus.BAD_REQUEST);
+        Throwable rootCause = e.getRootCause();
+        if(rootCause != null){
+            return new ResponseEntity<>(rootCause.getMessage(), HttpStatus.CONFLICT);
+        }
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler({MethodArgumentNotValidException.class})
@@ -38,5 +44,21 @@ public class GlobalExceptionHandler {
             .collect(Collectors.joining(", ")), 
             HttpStatus.BAD_REQUEST);
     }
+    
+    @ExceptionHandler({NullPointerException.class})
+    public ResponseEntity<?> handleNullPointerException(NullPointerException e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler({JsonParseException.class})
+    public ResponseEntity<?> handleJsonParseException(JsonParseException e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler({IllegalArgumentException.class})
+    public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+    
 }
 
