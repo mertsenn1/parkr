@@ -94,6 +94,7 @@ public class CarService implements ICarService
         }
         catch (Exception ex){
             log.info("Error occurred while deleting the car, error: {}", ex.getMessage());
+            throw new RuntimeException("Error occurred while deleting the car, error: {}");
         }
     }
 

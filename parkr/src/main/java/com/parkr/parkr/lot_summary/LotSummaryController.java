@@ -40,4 +40,9 @@ public class LotSummaryController {
         lotSummaryService.deleteLotSummary(id);
         return new ResponseEntity<Void>(HttpStatus.OK);
     }
+    
+    @ExceptionHandler({LotSummaryNotFoundException.class})
+    public ResponseEntity<?> handleException(LotSummaryNotFoundException e) {
+        return new ResponseEntity<> (e.getMessage(), HttpStatus.NOT_FOUND);
+    }
 }

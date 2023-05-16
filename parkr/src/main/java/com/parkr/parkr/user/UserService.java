@@ -20,6 +20,9 @@ import com.parkr.parkr.token.Token;
 import com.parkr.parkr.token.TokenRepository;
 import com.parkr.parkr.token.TokenType;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,6 +35,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -47,6 +51,7 @@ public class UserService implements IUserService
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final Validator validator;
 
     @Override
     public UserDto getUserById(Long id)
@@ -90,9 +95,6 @@ public class UserService implements IUserService
     {
         //User user;
         AuthenticationResponse response;
-        try
-        {
-
             //user = userRepository.save(convertToUser(userDto, address));
 
             response = register(userDto);
@@ -105,13 +107,7 @@ public class UserService implements IUserService
             }
             */
             
-            log.info("User {} is saved with mail: {}", userDto.getName(), userDto.getMail());
-        }
-        catch (Exception ex)
-        {
-            log.info("Error occurred while saving the user: {} with mail: {} error: {}", userDto.getName(), userDto.getMail(), ex.getMessage());
-            return null;
-        }
+        log.info("User {} is saved with mail: {}", userDto.getName(), userDto.getMail());
         System.out.println("Token response: " + response);
         return response;
     }
@@ -206,6 +202,7 @@ public class UserService implements IUserService
         user.setPhone(request.getPhone());
         user.setRole(request.getRole());
         user.setTokenType(TokenType.BEARER);
+        
         User savedUser = userRepository.save(user);
         String jwtToken = jwtService.generateToken(user);
         saveUserToken(savedUser, jwtToken);
