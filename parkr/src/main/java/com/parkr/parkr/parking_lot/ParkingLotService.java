@@ -188,6 +188,7 @@ public class ParkingLotService implements IParkingLotService
 
     @Override
     public void enterParkingLot(String plate, Long parkingLotID) {
+        log.info("Enter parking lot is called with plate: {}, and parkingLotID: {}!", plate, parkingLotID);
         // insert a data to lot_summary
         // get the parking lot and the car from parkingLotID and from the plate.
         Optional<ParkingLot> parkingLot = parkingLotRepository.findById(parkingLotID);
@@ -196,46 +197,53 @@ public class ParkingLotService implements IParkingLotService
             return;
         }
         Optional<Car> car = carRepository.findByPlate(plate);
-        if (!car.isPresent()) {
-            log.error("Car with the plate: {} could not be found", plate);
-            return;
+        if (car.isPresent()) {
+            // check if already exists
+            Long lotSummaryID = lotSummaryRepository.getExistingLotSummary(car.get().getId(), parkingLotID);
+            if (lotSummaryID != null) {
+                log.error("Car with id {} is already in parking lot with id: {}", car.get().getId(), parkingLotID);
+                return;
+            }
+            
+            try {
+                // increase the occupancy of parking lot by one
+                parkingLotRepository.increaseParkingLotOccupancy(parkingLotID);
+            } catch (Exception e) {
+                log.error("Parking Lot occupany could not be increased. CarID: {}, parkingLotID: {}", car.get().getId(), parkingLotID);
+            }
+
+            // create a clock
+            ZoneId zid = ZoneId.of("Europe/Istanbul");
+            LocalDateTime lt = LocalDateTime.now(zid);
+
+            LotSummaryDto lotSummaryDto = new LotSummaryDto();
+            lotSummaryDto.setStartTime(lt);
+            lotSummaryDto.setEndTime(null);
+            lotSummaryDto.setFee(0);
+            lotSummaryDto.setParkingLot(parkingLot.get());
+            lotSummaryDto.setCar(car.get());
+
+            try {
+                lotSummaryService.saveLotSummary(lotSummaryDto);
+                log.info("Car with plate {} has entered to parking lot with id {}", plate, parkingLotID);
+            } catch (Exception e) {
+                log.error("Error while Car with plate {} entering parking lot with id {}", plate, parkingLotID);
+            }
         }
-
-        // check if already exists
-        Long lotSummaryID = lotSummaryRepository.getExistingLotSummary(car.get().getId(), parkingLotID);
-        if (lotSummaryID != null) {
-            log.error("Car with id {} is already in parking lot with id: {}", car.get().getId(), parkingLotID);
-            return;
-        }
-        
-        try {
-            // increase the occupancy of parking lot by one
-            parkingLotRepository.increaseParkingLotOccupancy(parkingLotID);
-        } catch (Exception e) {
-            log.error("Parking Lot occupany could not be increased. CarID: {}, parkingLotID: {}", car.get().getId(), parkingLotID);
-        }
-
-        // create a clock
-        ZoneId zid = ZoneId.of("Europe/Istanbul");
-        LocalDateTime lt = LocalDateTime.now(zid);
-
-        LotSummaryDto lotSummaryDto = new LotSummaryDto();
-        lotSummaryDto.setStartTime(lt);
-        lotSummaryDto.setEndTime(null);
-        lotSummaryDto.setFee(0);
-        lotSummaryDto.setParkingLot(parkingLot.get());
-        lotSummaryDto.setCar(car.get());
-
-        try {
-            lotSummaryService.saveLotSummary(lotSummaryDto);
-            log.info("Car with plate {} has entered to parking lot with id {}", plate, parkingLotID);
-        } catch (Exception e) {
-            log.error("Error while Car with plate {} entering parking lot with id {}", plate, parkingLotID);
+        else {
+            log.info("Car with the plate: {} is not in the database!", plate);
+            try {
+                // increase the occupancy of parking lot by one
+                parkingLotRepository.increaseParkingLotOccupancy(parkingLotID);
+            } catch (Exception e) {
+                log.error("Parking Lot occupany could not be increased. CarID: {}, parkingLotID: {}", car.get().getId(), parkingLotID);
+            }
         }
     }
 
     @Override
     public void exitParkingLot(String plate, Long parkingLotID) {
+        log.info("Exit parking lot is called with plate: {}, and parkingLotID: {}!", plate, parkingLotID);
         // update the end_time of lot summary entry.
         Optional<ParkingLot> parkingLot = parkingLotRepository.findById(parkingLotID);
         if (!parkingLot.isPresent()) {
@@ -243,43 +251,48 @@ public class ParkingLotService implements IParkingLotService
             return;
         }
         Optional<Car> car = carRepository.findByPlate(plate);
-        if (!car.isPresent()) {
-            log.error("Car with the plate: {} could not be found", plate);
-            return;
+        if (car.isPresent()) {
+            Long lotSummaryID = lotSummaryRepository.getExistingLotSummary(car.get().getId(), parkingLotID);
+            if (lotSummaryID == null) {
+                log.error("Car with id {} is not in parking lot with id: {}", car.get().getId(), parkingLotID);
+                return;
+            }
+    
+            try {
+                // decrease the occupancy of parking lot by one
+                parkingLotRepository.decreaseParkingLotOccupancy(parkingLotID);
+            } catch (Exception e) {
+                log.error("Parking Lot occupany could not be decreased. CarID: {}, parkingLotID: {}", car.get().getId(), parkingLotID);
+            }
+    
+            // create a clock
+            ZoneId zid = ZoneId.of("Europe/Istanbul");
+      
+            // create a LocalDateTime object using now(zoneId)
+            LocalDateTime lt = LocalDateTime.now(zid);
+            try {
+                lotSummaryRepository.updateEndTime(lt, car.get().getId());
+            } catch (Exception e) {
+                log.error("Error while Car with id {} exiting parking lot with id {}", car.get().getId(), parkingLotID);
+            }
         }
-
-        Long lotSummaryID = lotSummaryRepository.getExistingLotSummary(car.get().getId(), parkingLotID);
-        if (lotSummaryID == null) {
-            log.error("Car with id {} is not in parking lot with id: {}", car.get().getId(), parkingLotID);
-            return;
-        }
-
-        try {
-            // decrease the occupancy of parking lot by one
-            parkingLotRepository.decreaseParkingLotOccupancy(parkingLotID);
-        } catch (Exception e) {
-            log.error("Parking Lot occupany could not be decreased. CarID: {}, parkingLotID: {}", car.get().getId(), parkingLotID);
-        }
-
-        // create a clock
-        ZoneId zid = ZoneId.of("Europe/Istanbul");
-  
-        // create a LocalDateTime object using now(zoneId)
-        LocalDateTime lt = LocalDateTime.now(zid);
-        try {
-            lotSummaryRepository.updateEndTime(lt, car.get().getId());
-        } catch (Exception e) {
-            log.error("Error while Car with id {} exiting parking lot with id {}", car.get().getId(), parkingLotID);
+        else {
+            log.info("Car with the plate: {} is not in the database!", plate);
+            try {
+                // decrease the occupancy of parking lot by one
+                parkingLotRepository.decreaseParkingLotOccupancy(parkingLotID);
+            } catch (Exception e) {
+                log.error("Parking Lot occupany could not be decreased. CarID: {}, parkingLotID: {}", car.get().getId(), parkingLotID);
+            }
         }
     }
 
     @Override
     public ParkingLotDto getParkingLotById(Long id) {
+        log.info("Parking Lot with the id: {} is requested", id);
         Optional<ParkingLot> parkingLot = parkingLotRepository.findById(id);
 
         if (!parkingLot.isPresent()) return null;
-
-        log.info("Parking Lot with the id: {} is requested", id);
 
         return convertToParkingLotDto(parkingLot.get());
     }
