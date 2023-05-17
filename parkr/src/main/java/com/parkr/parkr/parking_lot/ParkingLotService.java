@@ -1,6 +1,7 @@
 package com.parkr.parkr.parking_lot;
 
-import com.google.gson.JsonElement;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.parkr.parkr.car.Car;
 import com.parkr.parkr.car.CarRepository;
 import com.parkr.parkr.common.GoogleServices;
@@ -18,9 +19,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,6 +36,9 @@ public class ParkingLotService implements IParkingLotService
     private final CarRepository carRepository;
     private final LotSummaryRepository lotSummaryRepository;
     private final LotSummaryService lotSummaryService;
+    private final Cache<String, String> cache = Caffeine.newBuilder()
+                        .expireAfterWrite(15, TimeUnit.SECONDS)
+                        .build();
 
     @Override
     public List<ParkingLotModel> getNearbyLots(Double latitude, Double longitude) {
@@ -186,9 +192,44 @@ public class ParkingLotService implements IParkingLotService
         return sortedFaresMap;
     }
 
+    private String adjustLicensePlate(String plate) {
+        String adjustedPlate = plate.replaceAll("\\s", ""); // remove spaces.
+        adjustedPlate = adjustedPlate.toUpperCase();
+
+        String pattern = "^[0-9]{2}[A-Z]{1,3}[0-9]{2,5}$"; // regex for turkish license plates. 52AB123
+        if (adjustedPlate.matches(pattern)) {
+            log.info("The given plate {} => returned as {} is valid!", plate, adjustedPlate);
+            return adjustedPlate;
+        } else {
+            adjustedPlate = adjustedPlate.replaceAll("[$]", "S");
+            adjustedPlate = adjustedPlate.replaceAll("[€]", "E");
+            adjustedPlate = adjustedPlate.replaceAll("[@]", "A");
+            adjustedPlate = adjustedPlate.replaceAll("[&]", "8");
+            adjustedPlate = adjustedPlate.replaceAll("[%]", "5");
+            log.error("The given plate {} was invalid => returned {}!", plate, adjustedPlate);
+            return adjustedPlate; // return anyways.
+        }
+    }
+
     @Override
     public void enterParkingLot(String plate, Long parkingLotID) {
         log.info("Enter parking lot is called with plate: {}, and parkingLotID: {}!", plate, parkingLotID);
+        plate = adjustLicensePlate(plate);
+        
+        try {
+            String cached = cache.getIfPresent(plate); // check if the plate is in the cache.
+            if (cached != null && cached.equals("entry")) {
+                log.error("The car with the plate {} is found in the cache in entry.", plate);
+                return;
+            } else {
+                // The license plate has not been processed within the last 15 seconds, so process it
+                // Store the license plate in the cache
+                cache.put(plate, "entry");
+            }
+        } catch (Exception e) {
+            log.error("Cache error!");
+        }
+
         // insert a data to lot_summary
         // get the parking lot and the car from parkingLotID and from the plate.
         Optional<ParkingLot> parkingLot = parkingLotRepository.findById(parkingLotID);
@@ -244,6 +285,22 @@ public class ParkingLotService implements IParkingLotService
     @Override
     public void exitParkingLot(String plate, Long parkingLotID) {
         log.info("Exit parking lot is called with plate: {}, and parkingLotID: {}!", plate, parkingLotID);
+        plate = adjustLicensePlate(plate);
+
+        try {
+            String cached = cache.getIfPresent(plate); // check if the plate is in the cache.
+            if (cached != null && cached.equals("exit")) {
+                log.error("The car with the plate {} is found in the cache in exit.", plate);
+                return;
+            } else {
+                // The license plate has not been processed within the last 15 seconds, so process it
+                // Store the license plate in the cache
+                cache.put(plate, "exit");
+            }
+        } catch (Exception e) {
+            log.error("Cache error!");
+        }
+
         // update the end_time of lot summary entry.
         Optional<ParkingLot> parkingLot = parkingLotRepository.findById(parkingLotID);
         if (!parkingLot.isPresent()) {
