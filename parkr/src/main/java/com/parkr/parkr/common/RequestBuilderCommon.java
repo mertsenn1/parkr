@@ -49,22 +49,18 @@ public class RequestBuilderCommon
         return headersBuilder.build();
     }
 
-    public static RequestEntity<Map<String, Object>> buildRequestFuelEfficientRoute(Double originLatitude, Double originLongitude, Double destinationLatitude, Double destinationLongitude, String emissionType) throws IOException{
+    public static RequestEntity<Map<String, Object>> buildRequestFuelEfficientRoute(Double originLatitude, Double originLongitude, String destinationPlaceID, String emissionType) throws IOException{
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         headers.set("X-Goog-Api-Key", GOOGLE_PLACES_API_KEY);
-        headers.set("X-Goog-FieldMask", "routes.distanceMeters,routes.duration,routes.routeLabels,routes.routeToken,routes.travelAdvisory.fuelConsumptionMicroliters");
+        headers.set("X-Goog-FieldMask", "routes.distanceMeters,routes.duration,routes.routeLabels,routes.routeToken,routes.travelAdvisory.fuelConsumptionMicroliters,routes.polyline");
 
         URI uri = UriComponentsBuilder.fromHttpUrl(ROUTE_REQUEST_URI).build().toUri();
 
         Map<String, Object> origin = new HashMap<>();
         origin.put("latitude", originLatitude);
         origin.put("longitude", originLongitude);
-
-        Map<String, Object> destination = new HashMap<>();
-        destination.put("latitude", destinationLatitude);
-        destination.put("longitude", destinationLongitude);
 
         Map<String, Object> vehicleInfo = new HashMap<>();
         vehicleInfo.put("emissionType", emissionType);
@@ -74,7 +70,7 @@ public class RequestBuilderCommon
 
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("origin", Map.of("location", Map.of("latLng", Map.of("latitude", originLatitude, "longitude", originLongitude))));
-        requestBody.put("destination", Map.of("location", Map.of("latLng", Map.of("latitude", destinationLatitude, "longitude", destinationLongitude))));
+        requestBody.put("destination", Map.of("placeId", destinationPlaceID));
         requestBody.put("routeModifiers", Map.of("vehicleInfo", Map.of("emissionType", emissionType)));
         requestBody.put("travelMode", "DRIVE");
         requestBody.put("routingPreference", "TRAFFIC_AWARE_OPTIMAL");

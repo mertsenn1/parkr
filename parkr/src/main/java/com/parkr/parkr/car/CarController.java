@@ -32,21 +32,6 @@ public class CarController
         return ApiResponse.ok(carService.getAllCars());
     }
 
-    @PostMapping(value = "fuel")
-    @PreAuthorize("hasAuthority('USER') or hasAuthority('ADMIN')")
-    public ApiResponse getFuelLiter(@RequestBody String json) {
-        JSONObject jsonObject = new JSONObject(json);
-        Double originLatitude = jsonObject.getDouble("originLatitude");
-        Double originLongitude = jsonObject.getDouble("originLongitude");
-        Double destinationLatitude = jsonObject.getDouble("destinationLatitude");
-        Double destinationLongitude = jsonObject.getDouble("destinationLongitude");
-        String emissionType = jsonObject.getString("emissionType");
-        Double fuelInLitter = carService.getFuelConsumptionInLiters(originLatitude, originLongitude, destinationLatitude, destinationLongitude, FuelType.valueOf(emissionType));
-        //Double originLatitude, Double originLongitude, Double destinationLatitude, Double destinationLongitude, FuelType emissionType
-        return ApiResponse.ok(fuelInLitter);
-    }
-
-
     @PostMapping("/add-vehicle")
     @PreAuthorize("hasAuthority('USER') or hasAuthority('LOT_OWNER') or hasAuthority('ADMIN')")
     public ApiResponse saveCar(@RequestBody CarDto carDto) {

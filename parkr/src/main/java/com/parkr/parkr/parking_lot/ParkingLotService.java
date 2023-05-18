@@ -4,10 +4,12 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.parkr.parkr.car.Car;
 import com.parkr.parkr.car.CarRepository;
+import com.parkr.parkr.car.FuelType;
 import com.parkr.parkr.common.GoogleServices;
 import com.parkr.parkr.common.LocationModel;
 import com.parkr.parkr.common.ParkingLotDetailModel;
 import com.parkr.parkr.common.ParkingLotModel;
+import com.parkr.parkr.common.RouteDetailsModel;
 import com.parkr.parkr.lot_summary.LotSummaryDto;
 import com.parkr.parkr.lot_summary.LotSummaryRepository;
 import com.parkr.parkr.lot_summary.LotSummaryService;
@@ -341,6 +343,67 @@ public class ParkingLotService implements IParkingLotService
                 log.error("Parking Lot occupany could not be decreased. CarID: {}, parkingLotID: {}", car.get().getId(), parkingLotID);
             }
         }
+    }
+
+    @Override
+    public RouteDetailsModel getRouteDetails(Double originLatitude, Double originLongitude, String destinationPlaceID, Long carID){
+        Optional<Car> car = carRepository.findById(carID);
+        if (!car.isPresent()) {
+            log.error("Car could not be found with the id: {}", carID);
+            return null;
+        }
+        JSONObject jsonResponse = GoogleServices.getEcoFriendlyRoute(originLatitude, originLongitude, destinationPlaceID, FuelType.valueOf(car.get().getFuelType().toString()).toString());
+        JSONArray routes = jsonResponse.getJSONArray("routes");
+    
+        boolean ecoFriendlyFound = false;
+        JSONObject route = new JSONObject();
+        for (int i = 0; i < routes.length(); i++) {
+            route = routes.getJSONObject(i);
+            JSONArray routeLabels = route.getJSONArray("routeLabels");
+    
+            for (int j = 0; j < routeLabels.length(); j++) {
+                String label = routeLabels.getString(j);
+    
+                if ("FUEL_EFFICIENT".equals(label)) {
+                    ecoFriendlyFound = true;
+                    break;
+                }
+            }
+    
+            if (ecoFriendlyFound) {
+                break;
+            }
+        }
+    
+        if (!ecoFriendlyFound) {
+            throw new RuntimeException("FUEL_EFFICIENT route not found in the response");
+        }
+
+        RouteDetailsModel routeDetail = new RouteDetailsModel();
+        // Convert microliters to liters
+        JSONObject travelAdvisory = route.getJSONObject("travelAdvisory");
+        Double fuelConsumptionMicroliters = travelAdvisory.getDouble("fuelConsumptionMicroliters");
+        Double fuelConsumptionLiters = fuelConsumptionMicroliters / 1_000_000;
+        routeDetail.setFuelConsumptionInLiters(fuelConsumptionLiters);
+        
+        routeDetail.setDuration(route.getString("duration"));
+        routeDetail.setDistance(route.getDouble("distanceMeters") / 1000.0); // in km
+        routeDetail.setFuelType(car.get().getFuelType());
+        routeDetail.setPolyline(route.getJSONObject("polyline").getString("encodedPolyline"));
+        routeDetail.setRouteToken(route.getString("routeToken"));
+
+        Optional<ParkingLot> parkingLot = parkingLotRepository.findByPlaceId(destinationPlaceID);
+        Integer occupancy = null;
+        Integer capacity = null;
+        if (parkingLot.isPresent()) {
+            ParkingLot parkingLotEntity = parkingLot.get();
+            occupancy = parkingLotEntity.getOccupancy();
+            capacity = parkingLotEntity.getCapacity();
+        }
+        routeDetail.setOccupancy(occupancy);
+        routeDetail.setCapacity(capacity);
+
+        return routeDetail;
     }
 
     @Override

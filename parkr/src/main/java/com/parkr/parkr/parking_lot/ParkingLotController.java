@@ -4,6 +4,7 @@ import com.parkr.parkr.common.ApiResponse;
 import com.parkr.parkr.common.LocationModel;
 import com.parkr.parkr.common.ParkingLotOperationModel;
 import com.parkr.parkr.common.PlaceDetailRequestModel;
+import com.parkr.parkr.common.RouteDetailRequestModel;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +58,13 @@ public class ParkingLotController
     public ApiResponse exitParkingLot(@RequestBody ParkingLotOperationModel exitInfo) {
         parkingLotService.exitParkingLot(exitInfo.getLicensePlate(), exitInfo.getParkingLotID());
         return ApiResponse.ok();
+    }
+
+    @PostMapping(value = "/route-details")
+    @PreAuthorize("hasAuthority('USER') or hasAuthority('ADMIN')")
+    public ApiResponse getRouteDetails(@RequestBody RouteDetailRequestModel routeRequest) {
+        return ApiResponse.ok(parkingLotService.getRouteDetails(routeRequest.getOriginLatitude(), routeRequest.getOriginLongitude(),
+                                                                routeRequest.getDestinationPlaceID(), routeRequest.getCarID()));
     }
 
     @GetMapping("{id}")
