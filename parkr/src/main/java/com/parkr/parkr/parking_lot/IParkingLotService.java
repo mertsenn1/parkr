@@ -1,12 +1,10 @@
 package com.parkr.parkr.parking_lot;
 import java.util.List;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import com.google.gson.JsonElement;
+import com.parkr.parkr.car.FuelType;
 import com.parkr.parkr.common.ParkingLotDetailModel;
 import com.parkr.parkr.common.ParkingLotModel;
+import com.parkr.parkr.common.RouteDetailsModel;
 
 
 public interface IParkingLotService
@@ -25,4 +23,6 @@ public interface IParkingLotService
 
      void enterParkingLot(String plate, Long parkingLotID);
      void exitParkingLot(String plate, Long parkingLotID);
+
+     RouteDetailsModel getRouteDetails(Double originLatitude, Double originLongitude, String destinationPlaceID, Long carID);
 }

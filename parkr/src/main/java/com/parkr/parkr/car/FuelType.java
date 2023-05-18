@@ -2,8 +2,7 @@ package com.parkr.parkr.car;
 
 public enum FuelType
 {
-    DIESEL_OIL("DIESEL"),
-    AUTO_GAS("AUTOGAS"),
+    DIESEL("DIESEL"),
     GASOLINE("GASOLINE"),
     HYBRID("HYBRID"),
     ELECTRIC("ELECTRIC");

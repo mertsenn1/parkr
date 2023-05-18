@@ -15,7 +15,7 @@ public interface UserRepository extends JpaRepository<User, Long>
     Optional<User> findByMail(String mail);
 
     @Query("SELECT c FROM Car c JOIN c.user u ON u.id = ?1")
-    List<Car> findCarsOfUser(Long id);
+    List<Car> getCarsOfUser(Long id);
 
     Optional<User> findById(Long id);
     

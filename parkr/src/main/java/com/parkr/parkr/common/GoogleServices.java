@@ -67,15 +67,15 @@ public class GoogleServices {
         }
     }
 
-    public static JSONObject getEcoFriendlyRoute(Double originLatitude, Double originLongitude, Double destinationLatitude, Double destinationLongitude, String fuelType) {
+    public static JSONObject getEcoFriendlyRoute(Double originLatitude, Double originLongitude, String destinationPlaceID, String fuelType) {
         try
         {
-            RequestEntity<Map<String, Object>> requestEntity = RequestBuilderCommon.buildRequestFuelEfficientRoute(originLatitude, originLongitude, destinationLatitude, destinationLongitude, fuelType);
+            RequestEntity<Map<String, Object>> requestEntity = RequestBuilderCommon.buildRequestFuelEfficientRoute(originLatitude, originLongitude, destinationPlaceID, fuelType);
             RestTemplate restTemplate = new RestTemplate();
 
             ResponseEntity<String> response = restTemplate.exchange(requestEntity, String.class);
 
-            log.info("Finding eco friendly route is successful for origin-latitude: {} origin_longitude: {} destination-latitude: {} destination_longitude: {}", originLatitude, originLongitude, destinationLatitude, destinationLongitude);
+            log.info("Finding eco friendly route is successful for origin-latitude: {} origin_longitude: {} destination-parking-lot-placeID: {}", originLatitude, originLongitude, destinationPlaceID);
 
             JSONObject json = new JSONObject(response.getBody());
             return json;

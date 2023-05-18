@@ -41,6 +41,12 @@ public class UserController
         return ApiResponse.ok(userService.getPastParkingData());
     }
 
+    @GetMapping("/cars")
+    @PreAuthorize("hasAuthority('USER') or hasAuthority('ADMIN')")
+    public ApiResponse getCars() {
+        return ApiResponse.ok(userService.getCars());
+    }
+
     @GetMapping("/recent")
     @PreAuthorize("hasAuthority('USER') or hasAuthority('ADMIN')")
     public ApiResponse getRecentParkingData() {

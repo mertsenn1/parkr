@@ -194,6 +194,16 @@ public class UserService implements IUserService
         return responseList;
     }
 
+    @Override
+    public List<CarDto> getCars() {
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        System.out.println(currentUser.getId());
+
+        List<Car> cars = userRepository.getCarsOfUser(currentUser.getId());
+
+        return convertToCarDtos(cars);
+    }
+
     private AuthenticationResponse register(UserDto request){
         User user = new User();
         user.setMail(request.getMail());
@@ -251,7 +261,7 @@ public class UserService implements IUserService
                 .mail(user.getMail())
                 .name(user.getName())
                 .phone(user.getPhone())
-                .cars(convertToCarDtos(userRepository.findCarsOfUser(user.getId()))) // to display cars
+                .cars(convertToCarDtos(userRepository.getCarsOfUser(user.getId()))) // to display cars
                 .role(user.getRole())
                 .build();
     }
