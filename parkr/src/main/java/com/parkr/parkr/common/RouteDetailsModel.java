@@ -20,4 +20,5 @@ public class RouteDetailsModel {
     private Double fuelConsumptionInLiters;
     private Integer capacity;
     private Integer occupancy;
+    private String routeType;
 }
