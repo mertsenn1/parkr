@@ -73,6 +73,7 @@ public class RequestBuilderCommon
         requestBody.put("destination", Map.of("placeId", destinationPlaceID));
         requestBody.put("routeModifiers", Map.of("vehicleInfo", Map.of("emissionType", emissionType)));
         requestBody.put("travelMode", "DRIVE");
+        requestBody.put("polylineQuality", "HIGH_QUALITY");
         requestBody.put("routingPreference", "TRAFFIC_AWARE_OPTIMAL");
         requestBody.put("extraComputations", List.of("FUEL_CONSUMPTION"));
         requestBody.put("requestedReferenceRoutes", List.of("FUEL_EFFICIENT"));

@@ -346,17 +346,21 @@ public class ParkingLotService implements IParkingLotService
     }
 
     @Override
-    public RouteDetailsModel getRouteDetails(Double originLatitude, Double originLongitude, String destinationPlaceID, Long carID){
+    public List<RouteDetailsModel> getRouteDetails(Double originLatitude, Double originLongitude, String destinationPlaceID, Long carID){
         Optional<Car> car = carRepository.findById(carID);
         if (!car.isPresent()) {
             log.error("Car could not be found with the id: {}", carID);
-            return null;
+            throw new RuntimeException("Car could not be found in database in route-details!");
         }
         JSONObject jsonResponse = GoogleServices.getEcoFriendlyRoute(originLatitude, originLongitude, destinationPlaceID, FuelType.valueOf(car.get().getFuelType().toString()).toString());
         JSONArray routes = jsonResponse.getJSONArray("routes");
     
         boolean ecoFriendlyFound = false;
+        boolean defaultRouteFound = false;
+        boolean bothRoutesSame = true;
         JSONObject route = new JSONObject();
+        JSONObject ecoFriendlyRoute = new JSONObject();
+        JSONObject defaultRoute = new JSONObject();
         for (int i = 0; i < routes.length(); i++) {
             route = routes.getJSONObject(i);
             JSONArray routeLabels = route.getJSONArray("routeLabels");
@@ -364,13 +368,23 @@ public class ParkingLotService implements IParkingLotService
             for (int j = 0; j < routeLabels.length(); j++) {
                 String label = routeLabels.getString(j);
     
-                if ("FUEL_EFFICIENT".equals(label)) {
+                if ("DEFAULT_ROUTE".equals(label)) {
+                    defaultRouteFound = true;
+                    defaultRoute = route;
+                }
+                else if ("FUEL_EFFICIENT".equals(label)) {
                     ecoFriendlyFound = true;
-                    break;
+                    ecoFriendlyRoute = route;
                 }
             }
-    
-            if (ecoFriendlyFound) {
+            
+            if (defaultRouteFound && !ecoFriendlyFound) {
+                bothRoutesSame = false;
+            }
+            else if (!defaultRouteFound && ecoFriendlyFound) {
+                bothRoutesSame = false;
+            }
+            else if (ecoFriendlyFound && defaultRouteFound) {
                 break;
             }
         }
@@ -379,18 +393,21 @@ public class ParkingLotService implements IParkingLotService
             throw new RuntimeException("FUEL_EFFICIENT route not found in the response");
         }
 
-        RouteDetailsModel routeDetail = new RouteDetailsModel();
+        List<RouteDetailsModel> routeList = new ArrayList<>();
+
+        RouteDetailsModel ecoFriendlyrouteDetail = new RouteDetailsModel();
         // Convert microliters to liters
-        JSONObject travelAdvisory = route.getJSONObject("travelAdvisory");
+        JSONObject travelAdvisory = ecoFriendlyRoute.getJSONObject("travelAdvisory");
         Double fuelConsumptionMicroliters = travelAdvisory.getDouble("fuelConsumptionMicroliters");
         Double fuelConsumptionLiters = fuelConsumptionMicroliters / 1_000_000;
-        routeDetail.setFuelConsumptionInLiters(fuelConsumptionLiters);
+        ecoFriendlyrouteDetail.setFuelConsumptionInLiters(fuelConsumptionLiters);
         
-        routeDetail.setDuration(route.getString("duration"));
-        routeDetail.setDistance(route.getDouble("distanceMeters") / 1000.0); // in km
-        routeDetail.setFuelType(car.get().getFuelType());
-        routeDetail.setPolyline(route.getJSONObject("polyline").getString("encodedPolyline"));
-        routeDetail.setRouteToken(route.getString("routeToken"));
+        ecoFriendlyrouteDetail.setDuration(ecoFriendlyRoute.getString("duration"));
+        ecoFriendlyrouteDetail.setDistance(ecoFriendlyRoute.getDouble("distanceMeters") / 1000.0); // in km
+        ecoFriendlyrouteDetail.setFuelType(car.get().getFuelType());
+        ecoFriendlyrouteDetail.setPolyline(ecoFriendlyRoute.getJSONObject("polyline").getString("encodedPolyline"));
+        ecoFriendlyrouteDetail.setRouteToken(ecoFriendlyRoute.getString("routeToken"));
+        ecoFriendlyrouteDetail.setRouteType("FUEL_EFFICIENT");
 
         Optional<ParkingLot> parkingLot = parkingLotRepository.findByPlaceId(destinationPlaceID);
         Integer occupancy = null;
@@ -400,10 +417,29 @@ public class ParkingLotService implements IParkingLotService
             occupancy = parkingLotEntity.getOccupancy();
             capacity = parkingLotEntity.getCapacity();
         }
-        routeDetail.setOccupancy(occupancy);
-        routeDetail.setCapacity(capacity);
+        ecoFriendlyrouteDetail.setOccupancy(occupancy);
+        ecoFriendlyrouteDetail.setCapacity(capacity);
 
-        return routeDetail;
+        routeList.add(ecoFriendlyrouteDetail);
+
+        if (!bothRoutesSame) {
+            RouteDetailsModel defaultRouteDetailsModel = new RouteDetailsModel();
+            travelAdvisory = defaultRoute.getJSONObject("travelAdvisory");
+            fuelConsumptionMicroliters = travelAdvisory.getDouble("fuelConsumptionMicroliters");
+            fuelConsumptionLiters = fuelConsumptionMicroliters / 1_000_000;
+            defaultRouteDetailsModel.setFuelConsumptionInLiters(fuelConsumptionLiters);
+            defaultRouteDetailsModel.setDuration(defaultRoute.getString("duration"));
+            defaultRouteDetailsModel.setDistance(defaultRoute.getDouble("distanceMeters") / 1000.0); // in km
+            defaultRouteDetailsModel.setFuelType(car.get().getFuelType());
+            defaultRouteDetailsModel.setPolyline(defaultRoute.getJSONObject("polyline").getString("encodedPolyline"));
+            defaultRouteDetailsModel.setRouteToken(defaultRoute.getString("routeToken"));
+            defaultRouteDetailsModel.setOccupancy(occupancy);
+            defaultRouteDetailsModel.setCapacity(capacity);
+            defaultRouteDetailsModel.setRouteType("DEFAULT_ROUTE");
+            routeList.add(defaultRouteDetailsModel);
+        }
+
+        return routeList;
     }
 
     @Override

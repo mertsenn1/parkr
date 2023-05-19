@@ -24,5 +24,5 @@ public interface IParkingLotService
      void enterParkingLot(String plate, Long parkingLotID);
      void exitParkingLot(String plate, Long parkingLotID);
 
-     RouteDetailsModel getRouteDetails(Double originLatitude, Double originLongitude, String destinationPlaceID, Long carID);
+     List<RouteDetailsModel> getRouteDetails(Double originLatitude, Double originLongitude, String destinationPlaceID, Long carID);
 }
