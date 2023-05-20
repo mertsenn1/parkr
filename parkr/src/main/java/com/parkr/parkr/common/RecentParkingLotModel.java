@@ -14,7 +14,6 @@ public class RecentParkingLotModel {
     private String image;
     private Double rating;
     private Integer numOfRatings;
-    private Double distance;
     private String placeID;
     private LocationModel coordinates;
 }

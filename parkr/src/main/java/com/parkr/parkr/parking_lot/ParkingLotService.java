@@ -50,9 +50,11 @@ public class ParkingLotService implements IParkingLotService
         
         int size = results.length() > 10 ? 10 : results.length();
         ArrayList<ParkingLotModel> parkingLotResponse = new ArrayList<>();
+        List<String> destinations = new ArrayList<>();
         for ( int i = 0; i < size; i++) {
             JSONObject parkingLotData = results.getJSONObject(i);
             String placeID = parkingLotData.optString("place_id");
+            destinations.add(placeID);
             // if place_id exists in the database => then fetch fares, occupancy and capacity and return.
             Optional<ParkingLot> parkingLotDB = parkingLotRepository.findByPlaceId(placeID);
             Integer capacity = null, occupancy = null;
@@ -87,7 +89,7 @@ public class ParkingLotService implements IParkingLotService
             name = name == null ? parkingLotData.optString("name") : name;
             image = image == null ? "https://cdnuploads.aa.com.tr/uploads/Contents/2019/10/06/thumbs_b_c_0371b492b40dc268e6850ff2d1a9f968.jpg?v=134759" : image;
             Double rating = parkingLotData.optDouble("rating", 0.0);
-            String status = parkingLotData.optString("business_status");
+            String status = parkingLotData.optString("business_status", "OPERATIONAL");
             int numOfRatings = parkingLotData.optInt("user_ratings_total", 0);
             JSONObject coordinates = parkingLotData.optJSONObject("geometry").optJSONObject("location");
             LocationModel location = new LocationModel();
@@ -96,7 +98,6 @@ public class ParkingLotService implements IParkingLotService
             
             ParkingLotModel parkingLot = new ParkingLotModel();
             parkingLot.setName(name);
-            parkingLot.setDistance(2.5);
             parkingLot.setStatus(status);
             parkingLot.setRating(rating);
             parkingLot.setNumOfRatings(numOfRatings);
@@ -110,6 +111,28 @@ public class ParkingLotService implements IParkingLotService
             parkingLotResponse.add(parkingLot);
         }
 
+        JSONArray routeDistances;
+        try {
+            routeDistances = GoogleServices.getRouteDistances(latitude, longitude, destinations);
+        } catch (Exception e) {
+            routeDistances = null;
+        }
+
+        // finding the distances of parking lots to the user's location.
+        for (int i = 0; i < parkingLotResponse.size(); i++) {
+            Double distance = 0.0;
+            if (routeDistances != null) {
+                for ( int j = 0; j < routeDistances.length(); j++) {
+                    JSONObject routeDistance = routeDistances.getJSONObject(j);
+                    if (routeDistance.getInt("destinationIndex") == i) {
+                        distance = routeDistance.optDouble("distanceMeters", 0.0);
+                    }
+                }
+            }
+            parkingLotResponse.get(i).setDistance(distance / 1000.0); // as km
+        }
+
+        Collections.sort(parkingLotResponse, Comparator.comparing(ParkingLotModel::getDistance));
         return parkingLotResponse;
     }
 
@@ -162,7 +185,6 @@ public class ParkingLotService implements IParkingLotService
         parkingLotDetail.setStatus(status);
         parkingLotDetail.setRating(rating);
         parkingLotDetail.setNumOfRatings(numOfRatings);
-        parkingLotDetail.setDistance(2.5);
         parkingLotDetail.setPlaceID(placeID);
         parkingLotDetail.setCoordinates(location);
         parkingLotDetail.setCapacity(capacity);

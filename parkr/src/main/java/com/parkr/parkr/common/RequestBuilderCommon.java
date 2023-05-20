@@ -13,6 +13,7 @@ import com.parkr.parkr.car.FuelType;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -24,12 +25,14 @@ public class RequestBuilderCommon
     private static String GOOGLE_PLACES_API_KEY = "AIzaSyAgu7UnTtb-9hS2Aspkv6lp_n4Xu6Qm7ks";
 
     public static final String PLACES_REQUEST_URI = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?" +
-            "location=%s,%s&language=%s&radius=5000&type=parking&key=%s";
+            "location=%s,%s&language=%s&rankby=distance&type=parking&key=%s";
 
     public static final String PLACE_REQUEST_URI = "https://maps.googleapis.com/maps/api/place/details/json?" +
             "place_id=%s&key=%s";
 
-        public static final String ROUTE_REQUEST_URI = "https://routes.googleapis.com/directions/v2:computeRoutes";
+    public static final String ROUTE_REQUEST_URI = "https://routes.googleapis.com/directions/v2:computeRoutes";
+
+    public static final String ROUTE_MATRIX_REQUEST_URI = "https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix";
 
     public static RequestEntity<Void> buildRequestForLots(Double latitude, Double longitude, String language)
     {
@@ -77,6 +80,33 @@ public class RequestBuilderCommon
         requestBody.put("routingPreference", "TRAFFIC_AWARE_OPTIMAL");
         requestBody.put("extraComputations", List.of("FUEL_CONSUMPTION"));
         requestBody.put("requestedReferenceRoutes", List.of("FUEL_EFFICIENT"));
+
+        return new RequestEntity<>(requestBody, headers, HttpMethod.POST, uri);
+    }
+
+    public static RequestEntity<Map<String, Object>> buildRequestForRouteDistances(Double originLatitude, Double originLongitude, List<String> destinationPlaceIDs) throws IOException{
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        headers.set("X-Goog-Api-Key", GOOGLE_PLACES_API_KEY);
+        headers.set("X-Goog-FieldMask", "originIndex,destinationIndex,status,condition,distanceMeters,duration");
+
+        URI uri = UriComponentsBuilder.fromHttpUrl(ROUTE_MATRIX_REQUEST_URI).build().toUri();
+
+        Map<String, Object> origin = new HashMap<>();
+        origin.put("latitude", originLatitude);
+        origin.put("longitude", originLongitude);
+
+        List<Map<String, Object>> destinations = new ArrayList<>();
+        for (String placeID : destinationPlaceIDs) {
+            destinations.add(Map.of("waypoint", Map.of("placeId", placeID)));
+        }
+
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("origins", List.of(Map.of("waypoint", Map.of("location", Map.of("latLng", Map.of("latitude", originLatitude, "longitude", originLongitude))))) );
+        requestBody.put("destinations", destinations);
+        requestBody.put("travelMode", "DRIVE");
+        requestBody.put("routingPreference", "TRAFFIC_AWARE_OPTIMAL");
 
         return new RequestEntity<>(requestBody, headers, HttpMethod.POST, uri);
     }
