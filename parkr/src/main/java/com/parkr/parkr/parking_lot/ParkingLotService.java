@@ -348,11 +348,15 @@ public class ParkingLotService implements IParkingLotService
     @Override
     public List<RouteDetailsModel> getRouteDetails(Double originLatitude, Double originLongitude, String destinationPlaceID, Long carID){
         Optional<Car> car = carRepository.findById(carID);
+        FuelType fuelType = null;
         if (!car.isPresent()) {
             log.error("Car could not be found with the id: {}", carID);
-            throw new RuntimeException("Car could not be found in database in route-details!");
+            fuelType = FuelType.valueOf("DIESEL"); // default
         }
-        JSONObject jsonResponse = GoogleServices.getEcoFriendlyRoute(originLatitude, originLongitude, destinationPlaceID, FuelType.valueOf(car.get().getFuelType().toString()).toString());
+        else {
+            fuelType = car.get().getFuelType();
+        }
+        JSONObject jsonResponse = GoogleServices.getEcoFriendlyRoute(originLatitude, originLongitude, destinationPlaceID, fuelType.toString());
         JSONArray routes = jsonResponse.getJSONArray("routes");
     
         boolean ecoFriendlyFound = false;
@@ -404,7 +408,7 @@ public class ParkingLotService implements IParkingLotService
         
         ecoFriendlyrouteDetail.setDuration(ecoFriendlyRoute.getString("duration"));
         ecoFriendlyrouteDetail.setDistance(ecoFriendlyRoute.getDouble("distanceMeters") / 1000.0); // in km
-        ecoFriendlyrouteDetail.setFuelType(car.get().getFuelType());
+        ecoFriendlyrouteDetail.setFuelType(fuelType);
         ecoFriendlyrouteDetail.setPolyline(ecoFriendlyRoute.getJSONObject("polyline").getString("encodedPolyline"));
         ecoFriendlyrouteDetail.setRouteToken(ecoFriendlyRoute.getString("routeToken"));
         ecoFriendlyrouteDetail.setRouteType("FUEL_EFFICIENT");
@@ -430,7 +434,7 @@ public class ParkingLotService implements IParkingLotService
             defaultRouteDetailsModel.setFuelConsumptionInLiters(fuelConsumptionLiters);
             defaultRouteDetailsModel.setDuration(defaultRoute.getString("duration"));
             defaultRouteDetailsModel.setDistance(defaultRoute.getDouble("distanceMeters") / 1000.0); // in km
-            defaultRouteDetailsModel.setFuelType(car.get().getFuelType());
+            defaultRouteDetailsModel.setFuelType(fuelType);
             defaultRouteDetailsModel.setPolyline(defaultRoute.getJSONObject("polyline").getString("encodedPolyline"));
             defaultRouteDetailsModel.setRouteToken(defaultRoute.getString("routeToken"));
             defaultRouteDetailsModel.setOccupancy(occupancy);
