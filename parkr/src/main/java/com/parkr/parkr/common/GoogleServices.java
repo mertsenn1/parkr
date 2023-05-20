@@ -3,11 +3,15 @@ package com.parkr.parkr.common;
 
 
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
@@ -106,4 +110,31 @@ public class GoogleServices {
             throw new RuntimeException(ex.getMessage());
         }
     }
+
+    public static JSONArray getPlacePhoto(String photoReference) {
+        try
+        {
+            //RequestEntity<Void> requestEntity = RequestBuilderCommon.buildRequestForPlacePhoto(photoReference);
+             
+            RestTemplate restTemplate = new RestTemplate();
+            /*
+            HttpHeaders headers = new HttpHeaders();
+    headers.setAccept(Collections.singletonList(MediaType.ALL));
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            ResponseEntity<byte[]> response = restTemplate.exchange("https://maps.googleapis.com/maps/api/place/photo?max_width=400&photo_reference=AZose0m1i-AbtadICHa1lRjGWztAqSeXLqyrOrT1TyknIzLhlTgwy7RaDtq6aBH9glIc_9TjBamUteLugphFNOQy93-qn1Br3vbMfy-zdnUsRQOmsPqUQwKZ04VHM1YyiBxS5YKgdJcawyQIwlcM7Iv6RVSJcLd87SmnPK0619-8t-vdeOQ9&key=AIzaSyAgu7UnTtb-9hS2Aspkv6lp_n4Xu6Qm7ks",HttpMethod.GET,entity, byte[].class);
+*/
+            byte[] imageBytes = restTemplate.getForObject("https://maps.googleapis.com/maps/api/place/photo?max_width=400&photo_reference=AZose0m1i-AbtadICHa1lRjGWztAqSeXLqyrOrT1TyknIzLhlTgwy7RaDtq6aBH9glIc_9TjBamUteLugphFNOQy93-qn1Br3vbMfy-zdnUsRQOmsPqUQwKZ04VHM1YyiBxS5YKgdJcawyQIwlcM7Iv6RVSJcLd87SmnPK0619-8t-vdeOQ9&key=AIzaSyAgu7UnTtb-9hS2Aspkv6lp_n4Xu6Qm7ks", byte[].class);
+
+            log.info("Finding place photo is successful for photo-reference: {}", photoReference);
+            System.out.println(imageBytes);
+            //JSONArray json = new JSONArray(response.getBody());
+            return null;
+        }
+        catch (Exception ex) {
+            log.error("Error occurred while finding place photo: {}", ex.getMessage());
+            throw new RuntimeException(ex.getMessage());
+        }
+    }
+
+
 }

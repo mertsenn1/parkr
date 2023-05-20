@@ -34,6 +34,8 @@ public class RequestBuilderCommon
 
     public static final String ROUTE_MATRIX_REQUEST_URI = "https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix";
 
+    public static final String PLACE_PHOTO_REQUEST_URI = "https://maps.googleapis.com/maps/api/place/photo?max_width=400&photo_reference=%s&key=%s";
+
     public static RequestEntity<Void> buildRequestForLots(Double latitude, Double longitude, String language)
     {
         URI uri = encodeLotUrl(latitude, longitude, language);
@@ -46,6 +48,15 @@ public class RequestBuilderCommon
     public static RequestEntity<Void> buildRequestForPlace(String placeID)
     {
         URI uri = encodePlaceUrl(placeID);
+
+        RequestEntity.HeadersBuilder<?> headersBuilder = RequestEntity.get(uri);
+
+        return headersBuilder.build();
+    }
+
+    public static RequestEntity<Void> buildRequestForPlacePhoto(String photoReference)
+    {
+        URI uri = encodePhotoUrl(photoReference);
 
         RequestEntity.HeadersBuilder<?> headersBuilder = RequestEntity.get(uri);
 
@@ -111,6 +122,20 @@ public class RequestBuilderCommon
         return new RequestEntity<>(requestBody, headers, HttpMethod.POST, uri);
     }
 
+
+    private static URI encodePhotoUrl(String photoReference)
+    {
+        String url = String.format(PLACE_PHOTO_REQUEST_URI, photoReference, GOOGLE_PLACES_API_KEY);
+
+        String encodedUrl = UriComponentsBuilder.fromHttpUrl(url)
+                .build()
+                .encode()
+                .toUri()
+                .toString();
+        return UriComponentsBuilder.fromHttpUrl(encodedUrl)
+                .build(true)
+                .toUri();
+    }
      
     private static URI encodeLotUrl(Double latitude, Double longitude, String language)
     {
