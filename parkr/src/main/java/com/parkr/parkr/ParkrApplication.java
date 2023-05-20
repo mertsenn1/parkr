@@ -37,6 +37,8 @@ public class ParkrApplication {
 		destinations.add("ChIJlw--qkdG0xQRDa78VHdA6Gk");
 		System.out.println(GoogleServices.getRouteDistances(39.866248, 32.750615, destinations));
 		*/
+
+		//System.out.println(GoogleServices.getPlacePhoto("AZose0m1i-AbtadICHa1lRjGWztAqSeXLqyrOrT1TyknIzLhlTgwy7RaDtq6aBH9glIc_9TjBamUteLugphFNOQy93-qn1Br3vbMfy-zdnUsRQOmsPqUQwKZ04VHM1YyiBxS5YKgdJcawyQIwlcM7Iv6RVSJcLd87SmnPK0619-8t-vdeOQ9"));
 		SpringApplication.run(ParkrApplication.class, args);
 	}
 
