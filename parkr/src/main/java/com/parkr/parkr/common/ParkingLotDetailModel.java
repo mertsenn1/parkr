@@ -17,7 +17,6 @@ public class ParkingLotDetailModel {
     private Double rating;
     private Integer numOfRatings;
     private String status;
-    private Double distance;
     private String placeID;
     private LocationModel coordinates;
     private Map<String, Object> fares; // for now

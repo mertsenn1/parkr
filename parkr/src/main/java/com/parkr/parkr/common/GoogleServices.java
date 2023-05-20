@@ -3,8 +3,10 @@ package com.parkr.parkr.common;
 
 
 
+import java.util.List;
 import java.util.Map;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.http.MediaType;
 import org.springframework.http.RequestEntity;
@@ -82,6 +84,25 @@ public class GoogleServices {
         }
         catch (Exception ex) {
             log.error("Error occurred while finding fuel efficient routes: {}", ex.getMessage());
+            throw new RuntimeException(ex.getMessage());
+        }
+    }
+
+    public static JSONArray getRouteDistances(Double originLatitude, Double originLongitude, List<String> destinationPlaceIDs) {
+        try
+        {
+            RequestEntity<Map<String, Object>> requestEntity = RequestBuilderCommon.buildRequestForRouteDistances(originLatitude, originLongitude, destinationPlaceIDs);
+            RestTemplate restTemplate = new RestTemplate();
+
+            ResponseEntity<String> response = restTemplate.exchange(requestEntity, String.class);
+
+            log.info("Finding route distances is successful for origin-latitude: {} origin_longitude: {}", originLatitude, originLongitude);
+
+            JSONArray json = new JSONArray(response.getBody());
+            return json;
+        }
+        catch (Exception ex) {
+            log.error("Error occurred while finding route distances: {}", ex.getMessage());
             throw new RuntimeException(ex.getMessage());
         }
     }

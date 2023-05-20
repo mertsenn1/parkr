@@ -108,7 +108,6 @@ public class UserService implements IUserService
             */
             
         log.info("User {} is saved with mail: {}", userDto.getName(), userDto.getMail());
-        System.out.println("Token response: " + response);
         return response;
     }
 
@@ -116,7 +115,6 @@ public class UserService implements IUserService
     public List<ParkingInfoModel> getCurrentParkingData() {
         
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        System.out.println(currentUser.getId());
 
         List<LotSummary> summaryList = lotSummaryRepository.getCurrentLotSummariesOfUser(currentUser.getId());
 
@@ -137,7 +135,6 @@ public class UserService implements IUserService
     public List<ParkingInfoModel> getPastParkingData() {
         
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        System.out.println(currentUser.getId());
 
         List<LotSummary> summaryList = lotSummaryRepository.getPastLotSummariesOfUser(currentUser.getId());
 
@@ -157,7 +154,6 @@ public class UserService implements IUserService
     @Override
     public List<RecentParkingLotModel> getRecentParkingData() {
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        System.out.println(currentUser.getId());
 
         List<LotSummary> summaryList = lotSummaryRepository.getRecentLotSummaries(currentUser.getId());
 
@@ -181,7 +177,6 @@ public class UserService implements IUserService
             // for every summary => get place_id from parking lot id => request to google... get data for each place.
 
             responseModel.setName(parkingLotDetail.getName());
-            responseModel.setDistance(2.5);
             responseModel.setRating(parkingLotDetail.getRating());
             responseModel.setNumOfRatings(parkingLotDetail.getNumOfRatings());
             responseModel.setImage(parkingLotDetail.getImage());
@@ -197,7 +192,6 @@ public class UserService implements IUserService
     @Override
     public List<CarDto> getCars() {
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        System.out.println(currentUser.getId());
 
         List<Car> cars = userRepository.getCarsOfUser(currentUser.getId());
 
