@@ -62,12 +62,14 @@ public class ParkingLotService implements IParkingLotService
             Integer lowestFare = null;
             String name = null;
             String image = null;
+            boolean hasAggreement = false;
             if (parkingLotDB.isPresent()) {
                 ParkingLot parkingLotEntity = parkingLotDB.get();
                 name = parkingLotEntity.getName();
                 image = parkingLotEntity.getPhotoUrl();
                 capacity = parkingLotEntity.getCapacity();
                 occupancy = parkingLotEntity.getOccupancy();
+                hasAggreement = true;
                 String fares = parkingLotEntity.getFares();
                 if (fares.equalsIgnoreCase("free")) {
                     // this is a free parking lot
@@ -108,6 +110,7 @@ public class ParkingLotService implements IParkingLotService
             parkingLot.setOccupancy(occupancy);
             parkingLot.setLowestFare(lowestFare);
             parkingLot.setImage(image);
+            parkingLot.setHasAggreement(hasAggreement);
             
             parkingLotResponse.add(parkingLot);
         }
@@ -145,12 +148,14 @@ public class ParkingLotService implements IParkingLotService
         JSONObject faresJSON = null;
         String name = null, image = null;
         String fares = null;
+        boolean hasAggreement = false;
         if (parkingLotDB.isPresent()) {
             ParkingLot parkingLotEntity = parkingLotDB.get();
             name = parkingLotEntity.getName();
             image = parkingLotEntity.getPhotoUrl();
             capacity = parkingLotEntity.getCapacity();
             occupancy = parkingLotEntity.getOccupancy();
+            hasAggreement = true;
             fares = parkingLotEntity.getFares();
             if (fares.equalsIgnoreCase("free")) {
                 faresJSON = new JSONObject();
@@ -192,6 +197,7 @@ public class ParkingLotService implements IParkingLotService
         parkingLotDetail.setOccupancy(occupancy);
         parkingLotDetail.setFares(faresMap == null ? null : faresMap);
         parkingLotDetail.setImage(image);
+        parkingLotDetail.setHasAggreement(hasAggreement);
 
         return parkingLotDetail;
     }
@@ -473,6 +479,10 @@ public class ParkingLotService implements IParkingLotService
     public ParkingLot updateParkingLotFares(String fares) {
         User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         List<ParkingLot> parkingLots = currentUser.getParkingLots();
+        if (parkingLots == null || parkingLots.isEmpty()) {
+            log.error("User with the id {} does not own a parking lot!", currentUser.getId());
+            return null;
+        }
         // assume every user can own at most one parking lot.
         ParkingLot parkingLot = parkingLots.get(0);
         parkingLot.setFares(fares);

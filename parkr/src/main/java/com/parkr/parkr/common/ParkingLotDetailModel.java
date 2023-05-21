@@ -23,4 +23,5 @@ public class ParkingLotDetailModel {
     private Integer capacity;
     private Integer occupancy;
     private String image;
+    private Boolean hasAggreement;
 }

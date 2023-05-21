@@ -21,4 +21,5 @@ public class ParkingLotModel {
     private Integer occupancy;
     private Integer lowestFare;
     private String image;
+    private Boolean hasAggreement;
 }
