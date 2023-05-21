@@ -49,7 +49,7 @@ public class User implements UserDetails
     @Column(name = "phone")
     private String phone;
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
     name = "user_lots", 
     joinColumns = @JoinColumn(name = "user_id"), 

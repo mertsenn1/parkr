@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -466,6 +467,17 @@ public class ParkingLotService implements IParkingLotService
         }
 
         return routeList;
+    }
+
+    @Override
+    public ParkingLot updateParkingLotFares(String fares) {
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        List<ParkingLot> parkingLots = currentUser.getParkingLots();
+        // assume every user can own at most one parking lot.
+        ParkingLot parkingLot = parkingLots.get(0);
+        parkingLot.setFares(fares);
+        
+        return parkingLotRepository.save(parkingLot);
     }
 
     @Override
