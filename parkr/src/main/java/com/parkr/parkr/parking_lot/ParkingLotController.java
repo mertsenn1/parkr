@@ -1,6 +1,7 @@
 package com.parkr.parkr.parking_lot;
 
 import com.parkr.parkr.common.ApiResponse;
+import com.parkr.parkr.common.FaresModel;
 import com.parkr.parkr.common.LocationModel;
 import com.parkr.parkr.common.ParkingLotOperationModel;
 import com.parkr.parkr.common.PlaceDetailRequestModel;
@@ -71,6 +72,14 @@ public class ParkingLotController
     @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse getParkingLotById(@PathVariable Long id) {
         return ApiResponse.ok(parkingLotService.getParkingLotById(id));
+    }
+
+    @PostMapping("/update-fares")
+    @PreAuthorize("hasAuthority('LOT_OWNER')")
+    public ApiResponse updateFares(@RequestBody FaresModel fares) {
+        // fares = "free" OR
+        // fares = "{\"0-1 hours\": 4,\"1-2 hours\": 8,\"2-6 hours\": 12,\"6-16 hours\": 14}"
+        return ApiResponse.ok(parkingLotService.updateParkingLotFares(fares.getFares()));
     }
 
     @GetMapping
