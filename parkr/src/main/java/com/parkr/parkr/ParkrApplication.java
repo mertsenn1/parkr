@@ -10,6 +10,7 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 
 import com.parkr.parkr.common.GoogleServices;
+import com.parkr.parkr.user.UserService;
 
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;

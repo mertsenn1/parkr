@@ -17,4 +17,5 @@ public class ParkingInfoModel {
   private String name;
   private LocalDateTime startTime;
   private Integer fee;
+  private Long carID;
 }

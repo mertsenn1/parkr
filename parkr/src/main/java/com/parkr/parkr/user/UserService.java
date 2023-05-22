@@ -6,37 +6,33 @@ import com.parkr.parkr.car.Car;
 import com.parkr.parkr.car.CarDto;
 import com.parkr.parkr.car.ICarService;
 import com.parkr.parkr.common.CarUpdateOperationModel;
-import com.parkr.parkr.common.LocationModel;
 import com.parkr.parkr.common.ParkingInfoModel;
 import com.parkr.parkr.common.ParkingLotDetailModel;
-import com.parkr.parkr.common.ParkingLotModel;
 import com.parkr.parkr.common.RecentParkingLotModel;
 import com.parkr.parkr.config.JwtService;
 import com.parkr.parkr.lot_summary.LotSummary;
 import com.parkr.parkr.lot_summary.LotSummaryRepository;
 import com.parkr.parkr.parking_lot.IParkingLotService;
 import com.parkr.parkr.parking_lot.ParkingLot;
-import com.parkr.parkr.parking_lot.ParkingLotRepository;
 import com.parkr.parkr.token.Token;
 import com.parkr.parkr.token.TokenRepository;
 import com.parkr.parkr.token.TokenType;
 
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
-import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.json.JSONObject;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Slf4j
 @Service
@@ -44,7 +40,6 @@ import java.util.Set;
 public class UserService implements IUserService
 {
     private final UserRepository userRepository;
-    private final ParkingLotRepository parkingLotRepository;
     private final LotSummaryRepository lotSummaryRepository;
     private final TokenRepository tokenRepository;
     private final ICarService carService;
@@ -52,7 +47,6 @@ public class UserService implements IUserService
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
-    private final Validator validator;
 
     @Override
     public UserDto getUserById(Long id)
@@ -124,8 +118,9 @@ public class UserService implements IUserService
             ParkingInfoModel responseModel = new ParkingInfoModel();
             responseModel.setId(summary.getId());
             responseModel.setName(summary.getParkingLot().getName());
-            responseModel.setFee(summary.getFee());
+            responseModel.setFee(calculateCurrentFee(summary.getCar().getId()));
             responseModel.setStartTime(summary.getStartTime());
+            responseModel.setCarID(summary.getCar().getId());
 
             responseList.add(responseModel);
         });
@@ -146,6 +141,7 @@ public class UserService implements IUserService
             responseModel.setName(summary.getParkingLot().getName());
             responseModel.setFee(summary.getFee());
             responseModel.setStartTime(summary.getStartTime());
+            responseModel.setCarID(summary.getCar().getId());
 
             responseList.add(responseModel);
         });
@@ -183,6 +179,7 @@ public class UserService implements IUserService
             responseModel.setImage(parkingLotDetail.getImage());
             responseModel.setPlaceID(parkingLotDetail.getPlaceID());
             responseModel.setCoordinates(parkingLotDetail.getCoordinates());
+            responseModel.setCarID(summary.getCar().getId());
 
             responseList.add(responseModel);
         });
@@ -266,6 +263,42 @@ public class UserService implements IUserService
         catch (Exception ex){
             log.info("Error occurred while deleting the user, error: {}", ex.getMessage());
         }
+    }
+
+    @Override
+    public int calculateCurrentFee(Long carID){
+        // find the start time.
+        LotSummary summary = lotSummaryRepository.getCurrentLotSummaryOfCar(carID);
+        String fares = summary.getParkingLot().getFares();
+        if (fares.equalsIgnoreCase("free")) {
+            return 0;
+        }
+        LocalDateTime startTime = summary.getStartTime();
+        long differenceInMinutes = ChronoUnit.MINUTES.between(startTime, LocalDateTime.now());
+        long differenceInHours = differenceInMinutes / 60 + 1;
+
+        JSONObject parentJSON = new JSONObject(fares);
+        Integer freeMinutes = parentJSON.optInt("freeMinutes", 0);
+        
+        JSONObject faresJSON = new JSONObject(fares).getJSONObject("fares");
+
+        // we need to parse keys, and find the corresponding time interval.
+        
+        if (differenceInMinutes <= freeMinutes) {
+            return 0;
+        }
+        Integer fee = null;
+        for (String key : faresJSON.keySet()) {
+            String keyStr = key.replaceAll("[A-Za-z]", "").trim();
+            String[] parts = keyStr.split("-");
+            int from = Integer.parseInt(parts[0]); // from hour
+            int to = Integer.parseInt(parts[1]); // to hour
+            if (differenceInHours > from && differenceInHours <= to) {
+                fee = (Integer) faresJSON.get(key);
+                break;
+            }
+        }
+        return fee != null ? fee : -1;
     }
 
     private UserDto convertToUserDto(User user) {

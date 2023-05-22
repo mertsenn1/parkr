@@ -38,4 +38,6 @@ public interface IUserService
     Car updateCar(CarUpdateOperationModel carModel);
 
     void deleteCar(Long id);
+
+    int calculateCurrentFee(Long carID);
 }

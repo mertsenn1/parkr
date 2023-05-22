@@ -13,8 +13,10 @@ import com.parkr.parkr.common.RouteDetailsModel;
 import com.parkr.parkr.lot_summary.LotSummaryDto;
 import com.parkr.parkr.lot_summary.LotSummaryRepository;
 import com.parkr.parkr.lot_summary.LotSummaryService;
+import com.parkr.parkr.user.IUserService;
 import com.parkr.parkr.user.User;
 import com.parkr.parkr.user.UserRepository;
+import com.parkr.parkr.user.UserService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,22 +27,35 @@ import java.util.concurrent.TimeUnit;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class ParkingLotService implements IParkingLotService
 {
 
-    private final ParkingLotRepository parkingLotRepository;
-    private final CarRepository carRepository;
-    private final LotSummaryRepository lotSummaryRepository;
-    private final LotSummaryService lotSummaryService;
-    private final Cache<String, String> cache = Caffeine.newBuilder()
-                        .expireAfterWrite(15, TimeUnit.SECONDS)
-                        .build();
+    private ParkingLotRepository parkingLotRepository;
+    private CarRepository carRepository;
+    private LotSummaryRepository lotSummaryRepository;
+    private LotSummaryService lotSummaryService;
+    private IUserService userService;
+    private Cache<String, String> cache;
+
+    @Autowired
+    public ParkingLotService(@Lazy IUserService userService, ParkingLotRepository parkingLotRepository, LotSummaryRepository lotSummaryRepository,
+                                CarRepository carRepository) {
+        this.userService = userService;
+        this.lotSummaryRepository = lotSummaryRepository;
+        this.lotSummaryService = lotSummaryService;
+        this.carRepository = carRepository;
+        this.parkingLotRepository = parkingLotRepository;
+        this.cache = Caffeine.newBuilder()
+        .expireAfterWrite(15, TimeUnit.SECONDS)
+        .build();
+    }
 
     @Override
     public List<ParkingLotModel> getNearbyLots(Double latitude, Double longitude) {
@@ -77,7 +92,7 @@ public class ParkingLotService implements IParkingLotService
                 }
                 else {
                     // fares should be in the correct JSONObject format in the database.
-                    JSONObject faresJSON = new JSONObject(fares);
+                    JSONObject faresJSON = new JSONObject(fares).getJSONObject("fares");
                     lowestFare = 1000;
                     for (String key : faresJSON.keySet()) {
                         Integer fare = faresJSON.optInt(key);
@@ -90,7 +105,7 @@ public class ParkingLotService implements IParkingLotService
             }
 
             name = name == null ? parkingLotData.optString("name") : name;
-            image = image == null ? "https://cdnuploads.aa.com.tr/uploads/Contents/2019/10/06/thumbs_b_c_0371b492b40dc268e6850ff2d1a9f968.jpg?v=134759" : image;
+            image = image == null ? "https://media.istockphoto.com/id/1324853440/photo/parking-lot-in-public-areas.jpg?b=1&s=170667a&w=0&k=20&c=Y4f2QhvXJKwI9-hoaiPCvn_EQPZ2F_AQ03oNv4-3SlE=" : image;
             Double rating = parkingLotData.optDouble("rating", 0.0);
             String status = parkingLotData.optString("business_status", "OPERATIONAL");
             int numOfRatings = parkingLotData.optInt("user_ratings_total", 0);
@@ -161,7 +176,7 @@ public class ParkingLotService implements IParkingLotService
                 faresJSON = new JSONObject();
             }
             else {
-                faresJSON = new JSONObject(fares);
+                faresJSON = new JSONObject(fares).getJSONObject("fares");
             }
         }
 
@@ -171,7 +186,7 @@ public class ParkingLotService implements IParkingLotService
         }
 
         name = name == null ? placeDetails.optString("name") : name;
-        image = image == null ? "https://cdnuploads.aa.com.tr/uploads/Contents/2019/10/06/thumbs_b_c_0371b492b40dc268e6850ff2d1a9f968.jpg?v=134759" : image;
+        image = image == null ? "https://media.istockphoto.com/id/1324853440/photo/parking-lot-in-public-areas.jpg?b=1&s=170667a&w=0&k=20&c=Y4f2QhvXJKwI9-hoaiPCvn_EQPZ2F_AQ03oNv4-3SlE=" : image;
         Double rating = placeDetails.optDouble("rating", 0.0);
         String status = placeDetails.optString("business_status");
         int numOfRatings = placeDetails.optInt("user_ratings_total", 0);
@@ -358,7 +373,8 @@ public class ParkingLotService implements IParkingLotService
             // create a LocalDateTime object using now(zoneId)
             LocalDateTime lt = LocalDateTime.now(zid);
             try {
-                lotSummaryRepository.updateEndTime(lt, car.get().getId());
+                Integer fee = userService.calculateCurrentFee(car.get().getId());
+                lotSummaryRepository.updateLotSummary(lt, fee, car.get().getId());
             } catch (Exception e) {
                 log.error("Error while Car with id {} exiting parking lot with id {}", car.get().getId(), parkingLotID);
             }
