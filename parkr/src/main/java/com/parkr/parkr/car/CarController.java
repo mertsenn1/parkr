@@ -32,18 +32,6 @@ public class CarController
         return ApiResponse.ok(carService.getAllCars());
     }
 
-    @PostMapping("/add-vehicle")
-    @PreAuthorize("hasAuthority('USER') or hasAuthority('LOT_OWNER') or hasAuthority('ADMIN')")
-    public ApiResponse saveCar(@RequestBody CarDto carDto) {
-        return ApiResponse.ok(carService.saveCar(carDto, carDto.getUserId()));
-    }
-
-    @PutMapping("/edit-vehicle")
-    @PreAuthorize("hasAuthority('USER') or hasAuthority('LOT_OWNER') or hasAuthority('ADMIN')")
-    public ApiResponse updateCar(@RequestBody CarUpdateOperationModel carModel) {
-        return ApiResponse.ok(carService.updateCar(carModel));
-    }
-
     @DeleteMapping("{id}")
     @PreAuthorize("hasAuthority('USER') or hasAuthority('ADMIN')")
     public ResponseEntity<Void> deleteCar(@PathVariable Long id) {
