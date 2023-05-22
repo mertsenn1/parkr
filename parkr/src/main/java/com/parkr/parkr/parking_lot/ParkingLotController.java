@@ -78,7 +78,10 @@ public class ParkingLotController
     @PreAuthorize("hasAuthority('LOT_OWNER')")
     public ApiResponse updateFares(@RequestBody FaresModel fares) {
         // fares = "free" OR
-        // fares = "{\"0-1 hours\": 4,\"1-2 hours\": 8,\"2-6 hours\": 12,\"6-16 hours\": 14}"
+        // fares = "{\"freeMinutes\":15, \"fares\":{\"0-1 hours\": 5,\"1-2 hours\": 8,\"2-6 hours\": 12,\"6-16 hours\": 14}}"
+        if (!fares.getFares().equalsIgnoreCase("free")) {
+            JSONObject validate = new JSONObject(fares.getFares()).getJSONObject("fares");
+        }
         return ApiResponse.ok(parkingLotService.updateParkingLotFares(fares.getFares()));
     }
 
