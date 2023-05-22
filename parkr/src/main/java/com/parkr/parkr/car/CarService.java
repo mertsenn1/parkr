@@ -90,10 +90,13 @@ public class CarService implements ICarService
 
     @Override
     public void deleteCar(Long id){
-        Optional<Car> lotSummary = carRepository.findById(id);
-        if (!lotSummary.isPresent()) throw new CarNotFoundException("Car couldn't found by id: " + id);
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Optional<Car> car = carRepository.findById(id);
+        if (!car.isPresent()) throw new CarNotFoundException("Car couldn't found by id: " + id);
+        if (!(user.getId().equals(car.get().getUser().getId()))) throw new CarNotFoundException("User does not own the specified car: " + id);
+        
         try{
-            carRepository.delete(lotSummary.get());
+            carRepository.delete(car.get());
             log.info("Car with id is deleted: {}", id);
         }
         catch (Exception ex){

@@ -36,4 +36,6 @@ public interface IUserService
     Car addCar(CarDto carDto);
 
     Car updateCar(CarUpdateOperationModel carModel);
+
+    void deleteCar(Long id);
 }

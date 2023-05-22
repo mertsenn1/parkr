@@ -230,6 +230,12 @@ public class UserService implements IUserService
     }
 
     @Override
+    public void deleteCar(Long id)
+    {
+        carService.deleteCar(id);
+    }
+
+    @Override
     public AuthenticationResponse signIn(AuthenticationRequest request){
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getMail(), request.getPassword()));
         User user = userRepository.findByMail(request.getMail()).get();

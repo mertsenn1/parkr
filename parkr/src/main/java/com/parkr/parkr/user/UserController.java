@@ -61,6 +61,13 @@ public class UserController
         return ApiResponse.ok(userService.updateCar(carModel));
     }
 
+    @DeleteMapping("/cars/{id}")
+    @PreAuthorize("hasAuthority('USER') or hasAuthority('ADMIN')")
+    public ResponseEntity<Void> deleteCar(@PathVariable Long id) {
+        userService.deleteCar(id);
+        return new ResponseEntity<Void>(HttpStatus.OK);
+    }
+
     @GetMapping("/recent")
     @PreAuthorize("hasAuthority('USER') or hasAuthority('ADMIN')")
     public ApiResponse getRecentParkingData() {
@@ -75,13 +82,6 @@ public class UserController
     @PostMapping("/sign-in")
     public ApiResponse signIn(@RequestBody AuthenticationRequest request) {
         return ApiResponse.ok(userService.signIn(request));
-    }
-
-    @DeleteMapping("{id}")
-    @PreAuthorize("hasAuthority('ADMIN')")
-    public ResponseEntity<Void> deleteLotSummary(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return new ResponseEntity<Void>(HttpStatus.OK);
     }
 
     @ExceptionHandler({UserNotFoundException.class})
