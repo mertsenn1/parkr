@@ -10,7 +10,7 @@ public interface ICarService
 
     List<CarDto> getAllCars();
 
-    Car saveCar(CarDto carDto, Long userId);
+    Car saveCar(CarDto carDto);
 
     Car updateCar(CarUpdateOperationModel carModel);
 

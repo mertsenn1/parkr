@@ -47,13 +47,13 @@ public class CarService implements ICarService
     }
 
     @Override
-    public Car saveCar(CarDto carDto, Long userId)
+    public Car saveCar(CarDto carDto)
     {
         Car car;
         User user;
         try
         {
-            user = userRepository.findById(userId).get();
+            user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
             car = carRepository.save(convertToCar(carDto, user));
             log.info("Car is saved with id: {}", car.getId());
@@ -69,13 +69,17 @@ public class CarService implements ICarService
     @Override
     public Car updateCar(CarUpdateOperationModel carModel)
     {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Optional<Car> car = carRepository.findById(carModel.getId());
 
-        if (car.isEmpty()) return null;
+        if (!car.isPresent()) return null;
 
-        
+        if (!(user.getId()).equals(car.get().getUser().getId())) {
+            log.info("Car does not belong to the user, car id: {}, user id: {}", carModel.getId(), user.getId());
+            return null;
+        }
 
-        Car newCar = convertToCar(carModel, car.get().getUser());
+        Car newCar = convertToCar(carModel, user);
         newCar.setId(carModel.getId());
         Car updatedCar = carRepository.save(newCar);
 

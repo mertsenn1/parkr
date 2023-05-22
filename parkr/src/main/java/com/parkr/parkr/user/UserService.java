@@ -5,6 +5,7 @@ import com.parkr.parkr.auth.AuthenticationResponse;
 import com.parkr.parkr.car.Car;
 import com.parkr.parkr.car.CarDto;
 import com.parkr.parkr.car.ICarService;
+import com.parkr.parkr.common.CarUpdateOperationModel;
 import com.parkr.parkr.common.LocationModel;
 import com.parkr.parkr.common.ParkingInfoModel;
 import com.parkr.parkr.common.ParkingLotDetailModel;
@@ -214,6 +215,18 @@ public class UserService implements IUserService
         return AuthenticationResponse.builder()
         .token(jwtToken)
         .build();
+    }
+
+    @Override
+    public Car addCar(CarDto carDto)
+    {
+        return carService.saveCar(carDto);
+    }
+
+    @Override
+    public Car updateCar(CarUpdateOperationModel carModel)
+    {
+        return carService.updateCar(carModel);
     }
 
     @Override

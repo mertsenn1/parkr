@@ -4,7 +4,9 @@ import java.util.List;
 
 import com.parkr.parkr.auth.AuthenticationRequest;
 import com.parkr.parkr.auth.AuthenticationResponse;
+import com.parkr.parkr.car.Car;
 import com.parkr.parkr.car.CarDto;
+import com.parkr.parkr.common.CarUpdateOperationModel;
 import com.parkr.parkr.common.ParkingInfoModel;
 import com.parkr.parkr.common.ParkingLotModel;
 import com.parkr.parkr.common.RecentParkingLotModel;
@@ -30,4 +32,8 @@ public interface IUserService
     List<RecentParkingLotModel> getRecentParkingData();
 
     List<CarDto> getCars();
+
+    Car addCar(CarDto carDto);
+
+    Car updateCar(CarUpdateOperationModel carModel);
 }
