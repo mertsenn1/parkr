@@ -230,6 +230,26 @@ public class ParkingLotService implements IParkingLotService
         return parkingLotDetail;
     }
 
+    public HashMap<String, Object> getParkingLotFares(){
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        // get the parking lot of the user
+        ParkingLot parkingLot = currentUser.getParkingLots().get(0);
+        String fares = parkingLot.getFares();
+        if (fares.equalsIgnoreCase("free")) {
+            return new HashMap<String, Object>();
+        }
+        else {
+            HashMap<String, Object> faresMap = new HashMap<>();
+            JSONObject parentJSON = new JSONObject(fares);
+            JSONObject faresJSON = parentJSON.getJSONObject("fares");
+            faresMap = sortFares((HashMap<String, Object>) faresJSON.toMap());
+            HashMap<String,Object> parentMap = new HashMap<>();
+            parentMap.put("fares", faresMap);
+            parentMap.put("freeMinutes", parentJSON.getInt("freeMinutes"));
+            return parentMap;
+        }
+    }
+
     private LinkedHashMap<String, Object> sortFares(HashMap<String, Object> faresMap) {
         List<Map.Entry<String, Object>> list = new LinkedList<Map.Entry<String, Object>>(faresMap.entrySet());
     

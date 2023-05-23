@@ -1,4 +1,5 @@
 package com.parkr.parkr.parking_lot;
+import java.util.HashMap;
 import java.util.List;
 
 import com.parkr.parkr.car.FuelType;
@@ -32,4 +33,6 @@ public interface IParkingLotService
      List<LotActivityModel> getCurrentLotActivities();
 
      List<LotActivityModel> getPastLotActivities(); 
+
+     HashMap<String, Object> getParkingLotFares();
 }

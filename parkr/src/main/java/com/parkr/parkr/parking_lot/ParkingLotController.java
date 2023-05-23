@@ -97,6 +97,12 @@ public class ParkingLotController
         return ApiResponse.ok(parkingLotService.getPastLotActivities());
     }
 
+    @GetMapping("/lot-fares")
+    @PreAuthorize("hasAuthority('LOT_OWNER')")
+    public ApiResponse getLotFares() {
+        return ApiResponse.ok(parkingLotService.getParkingLotFares());
+    }
+
     @GetMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse getAllParkingLots() {
