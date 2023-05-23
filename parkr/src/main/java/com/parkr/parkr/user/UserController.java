@@ -4,6 +4,7 @@ import com.parkr.parkr.auth.AuthenticationRequest;
 import com.parkr.parkr.car.CarDto;
 import com.parkr.parkr.common.ApiResponse;
 import com.parkr.parkr.common.CarUpdateOperationModel;
+import com.parkr.parkr.common.ValidateTokenRequest;
 import com.parkr.parkr.lot_summary.ILotSummaryService;
 
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -82,6 +83,11 @@ public class UserController
     @PostMapping("/sign-in")
     public ApiResponse signIn(@RequestBody AuthenticationRequest request) {
         return ApiResponse.ok(userService.signIn(request));
+    }
+
+    @PostMapping("/validate-token")
+    public ApiResponse validateToken(@RequestBody ValidateTokenRequest request) {
+        return ApiResponse.ok(userService.validateToken(request.getToken()));
     }
 
     @ExceptionHandler({UserNotFoundException.class})
