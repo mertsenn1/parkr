@@ -298,6 +298,7 @@ public class UserService implements IUserService
             return 0;
         }
         Integer fee = null;
+        Integer maxFee = -1;
         for (String key : faresJSON.keySet()) {
             String keyStr = key.replaceAll("[A-Za-z]", "").trim();
             String[] parts = keyStr.split("-");
@@ -307,8 +308,11 @@ public class UserService implements IUserService
                 fee = (Integer) faresJSON.get(key);
                 break;
             }
+            if (maxFee < (Integer) faresJSON.get(key)) {
+                maxFee = (Integer) faresJSON.get(key);
+            }
         }
-        return fee != null ? fee : -1;
+        return fee != null ? fee : maxFee;
     }
 
     private UserDto convertToUserDto(User user) {
