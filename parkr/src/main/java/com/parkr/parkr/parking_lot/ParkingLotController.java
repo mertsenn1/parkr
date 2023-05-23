@@ -85,6 +85,18 @@ public class ParkingLotController
         return ApiResponse.ok(parkingLotService.updateParkingLotFares(fares.getFares()));
     }
 
+    @GetMapping("/current-lot-activities")
+    @PreAuthorize("hasAuthority('LOT_OWNER')")
+    public ApiResponse getCurrentLotActivities() {
+        return ApiResponse.ok(parkingLotService.getCurrentLotActivities());
+    }
+
+    @GetMapping("/past-lot-activities")
+    @PreAuthorize("hasAuthority('LOT_OWNER')")
+    public ApiResponse getPastLotActivities() {
+        return ApiResponse.ok(parkingLotService.getPastLotActivities());
+    }
+
     @GetMapping
     @PreAuthorize("hasAuthority('ADMIN')")
     public ApiResponse getAllParkingLots() {

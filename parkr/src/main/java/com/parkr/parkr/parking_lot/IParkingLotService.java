@@ -2,6 +2,7 @@ package com.parkr.parkr.parking_lot;
 import java.util.List;
 
 import com.parkr.parkr.car.FuelType;
+import com.parkr.parkr.common.LotActivityModel;
 import com.parkr.parkr.common.ParkingLotDetailModel;
 import com.parkr.parkr.common.ParkingLotModel;
 import com.parkr.parkr.common.RouteDetailsModel;
@@ -27,4 +28,8 @@ public interface IParkingLotService
      List<RouteDetailsModel> getRouteDetails(Double originLatitude, Double originLongitude, String destinationPlaceID, Long carID);
 
      ParkingLot updateParkingLotFares(String fares);
+
+     List<LotActivityModel> getCurrentLotActivities();
+
+     List<LotActivityModel> getPastLotActivities(); 
 }

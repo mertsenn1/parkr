@@ -7,9 +7,11 @@ import com.parkr.parkr.car.CarRepository;
 import com.parkr.parkr.car.FuelType;
 import com.parkr.parkr.common.GoogleServices;
 import com.parkr.parkr.common.LocationModel;
+import com.parkr.parkr.common.LotActivityModel;
 import com.parkr.parkr.common.ParkingLotDetailModel;
 import com.parkr.parkr.common.ParkingLotModel;
 import com.parkr.parkr.common.RouteDetailsModel;
+import com.parkr.parkr.lot_summary.LotSummary;
 import com.parkr.parkr.lot_summary.LotSummaryDto;
 import com.parkr.parkr.lot_summary.LotSummaryRepository;
 import com.parkr.parkr.lot_summary.LotSummaryService;
@@ -388,6 +390,51 @@ public class ParkingLotService implements IParkingLotService
                 log.error("Parking Lot occupany could not be decreased. CarID: {}, parkingLotID: {}", car.get().getId(), parkingLotID);
             }
         }
+    }
+
+    @Override
+    public List<LotActivityModel> getCurrentLotActivities() {
+        
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        List<LotSummary> summaryList = lotSummaryRepository.getCurrentLotSummariesOfParkingLot(currentUser.getParkingLots().get(0).getId());
+
+        ArrayList<LotActivityModel> responseList = new ArrayList<>();
+        summaryList.forEach(summary -> {
+            LotActivityModel responseModel = new LotActivityModel();
+            responseModel.setId(summary.getId());
+            responseModel.setLicensePlate(summary.getCar().getPlate());
+            responseModel.setFee(userService.calculateCurrentFee(summary.getCar().getId()));
+            responseModel.setStartTime(summary.getStartTime());
+            responseModel.setCarType(summary.getCar().getCarType());
+            responseModel.setStatus("Unpaid");
+
+            responseList.add(responseModel);
+        });
+        return responseList;
+    }
+
+    @Override
+    public List<LotActivityModel> getPastLotActivities() {
+        
+        User currentUser = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        List<LotSummary> summaryList = lotSummaryRepository.getPastLotSummariesOfParkingLot(currentUser.getParkingLots().get(0).getId());
+
+        ArrayList<LotActivityModel> responseList = new ArrayList<>();
+        summaryList.forEach(summary -> {
+            LotActivityModel responseModel = new LotActivityModel();
+            responseModel.setId(summary.getId());
+            responseModel.setLicensePlate(summary.getCar().getPlate());
+            responseModel.setFee(summary.getFee());
+            responseModel.setStartTime(summary.getStartTime());
+            responseModel.setEndTime(summary.getEndTime());
+            responseModel.setCarType(summary.getCar().getCarType());
+            responseModel.setStatus("Paid Online");
+
+            responseList.add(responseModel);
+        });
+        return responseList;
     }
 
     @Override
