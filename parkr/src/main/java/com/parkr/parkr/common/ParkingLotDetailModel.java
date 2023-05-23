@@ -20,6 +20,7 @@ public class ParkingLotDetailModel {
     private String placeID;
     private LocationModel coordinates;
     private Map<String, Object> fares; // for now
+    private Integer lowestFare;
     private Integer capacity;
     private Integer occupancy;
     private String image;
