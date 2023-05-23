@@ -233,6 +233,16 @@ public class UserService implements IUserService
     }
 
     @Override
+    public boolean validateToken(String token) {
+        try {
+            jwtService.isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
     public AuthenticationResponse signIn(AuthenticationRequest request){
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getMail(), request.getPassword()));
         User user = userRepository.findByMail(request.getMail()).get();

@@ -40,4 +40,6 @@ public interface IUserService
     void deleteCar(Long id);
 
     int calculateCurrentFee(Long carID);
+
+    boolean validateToken(String token);
 }
