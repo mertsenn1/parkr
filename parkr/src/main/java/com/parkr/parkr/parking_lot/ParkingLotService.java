@@ -166,6 +166,7 @@ public class ParkingLotService implements IParkingLotService
         String name = null, image = null;
         String fares = null;
         boolean hasAggreement = false;
+        Integer lowestFare = null;
         if (parkingLotDB.isPresent()) {
             ParkingLot parkingLotEntity = parkingLotDB.get();
             name = parkingLotEntity.getName();
@@ -176,9 +177,18 @@ public class ParkingLotService implements IParkingLotService
             fares = parkingLotEntity.getFares();
             if (fares.equalsIgnoreCase("free")) {
                 faresJSON = new JSONObject();
+                lowestFare = 0;
             }
             else {
                 faresJSON = new JSONObject(fares).getJSONObject("fares");
+                lowestFare = 1000;
+                for (String key : faresJSON.keySet()) {
+                    Integer fare = faresJSON.optInt(key);
+                    if (fare == 0) continue;
+                    if (fare < lowestFare) {
+                        lowestFare = fare;
+                    }
+                }
             }
         }
 
@@ -215,6 +225,7 @@ public class ParkingLotService implements IParkingLotService
         parkingLotDetail.setFares(faresMap == null ? null : faresMap);
         parkingLotDetail.setImage(image);
         parkingLotDetail.setHasAggreement(hasAggreement);
+        parkingLotDetail.setLowestFare(lowestFare);
 
         return parkingLotDetail;
     }
