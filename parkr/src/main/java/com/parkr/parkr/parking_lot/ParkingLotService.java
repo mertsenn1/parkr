@@ -245,7 +245,7 @@ public class ParkingLotService implements IParkingLotService
             faresMap = sortFares((HashMap<String, Object>) faresJSON.toMap());
             HashMap<String,Object> parentMap = new HashMap<>();
             parentMap.put("fares", faresMap);
-            parentMap.put("freeMinutes", parentJSON.getInt("freeMinutes"));
+            parentMap.put("freeMinutes", parentJSON.optInt("freeMinutes", 0));
             return parentMap;
         }
     }
