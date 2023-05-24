@@ -3,7 +3,9 @@ package com.parkr.parkr.parking_lot;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.parkr.parkr.car.Car;
+import com.parkr.parkr.car.CarDto;
 import com.parkr.parkr.car.CarRepository;
+import com.parkr.parkr.car.CarType;
 import com.parkr.parkr.car.FuelType;
 import com.parkr.parkr.common.GoogleServices;
 import com.parkr.parkr.common.LocationModel;
@@ -41,18 +43,20 @@ public class ParkingLotService implements IParkingLotService
 
     private ParkingLotRepository parkingLotRepository;
     private CarRepository carRepository;
+    private UserRepository userRepository;
     private LotSummaryRepository lotSummaryRepository;
     private LotSummaryService lotSummaryService;
     private IUserService userService;
     private Cache<String, String> cache;
 
     @Autowired
-    public ParkingLotService(@Lazy IUserService userService, ParkingLotRepository parkingLotRepository, LotSummaryService lotSummaryService, LotSummaryRepository lotSummaryRepository,
+    public ParkingLotService(@Lazy IUserService userService, ParkingLotRepository parkingLotRepository, UserRepository userRepository, LotSummaryService lotSummaryService, LotSummaryRepository lotSummaryRepository,
                                 CarRepository carRepository) {
         this.userService = userService;
         this.lotSummaryRepository = lotSummaryRepository;
         this.lotSummaryService = lotSummaryService;
         this.carRepository = carRepository;
+        this.userRepository = userRepository;
         this.parkingLotRepository = parkingLotRepository;
         this.cache = Caffeine.newBuilder()
         .expireAfterWrite(15, TimeUnit.SECONDS)
@@ -353,8 +357,33 @@ public class ParkingLotService implements IParkingLotService
         else {
             log.info("Car with the plate: {} is not in the database!", plate);
             try {
-                // increase the occupancy of parking lot by one
                 parkingLotRepository.increaseParkingLotOccupancy(parkingLotID);
+                Car newCar = new Car();
+                newCar.setCarType(CarType.valueOf("UNKNOWN"));
+                newCar.setFuelType(FuelType.valueOf("UNKNOWN"));
+                newCar.setModel("UNKNOWN");
+                newCar.setUser(null);
+                newCar.setPlate(plate);
+
+                Car savedCar = carRepository.save(newCar);
+                // increase the occupancy of parking lot by one
+
+                ZoneId zid = ZoneId.of("Europe/Istanbul");
+                LocalDateTime lt = LocalDateTime.now(zid);
+    
+                //LocalDateTime specificDate = LocalDateTime.of(2023, Month.MAY, 22, 17, 01, 15);
+                LotSummaryDto lotSummaryDto = new LotSummaryDto();
+                lotSummaryDto.setStartTime(lt);
+                lotSummaryDto.setEndTime(null);
+                lotSummaryDto.setFee(0);
+                lotSummaryDto.setParkingLot(parkingLot.get());
+                lotSummaryDto.setCar(savedCar);
+                try {
+                    lotSummaryService.saveLotSummary(lotSummaryDto);
+                    log.info("Car with plate {} has entered to parking lot with id {}", plate, parkingLotID);
+                } catch (Exception e) {
+                    log.error("Error while Car with plate {} entering parking lot with id {}", plate, parkingLotID);
+                }
             } catch (Exception e) {
                 log.error("Parking Lot occupany could not be increased. CarID: {}, parkingLotID: {}", car.get().getId(), parkingLotID);
             }
@@ -462,7 +491,7 @@ public class ParkingLotService implements IParkingLotService
             responseModel.setStartTime(summary.getStartTime());
             responseModel.setEndTime(summary.getEndTime());
             responseModel.setCarType(summary.getCar().getCarType());
-            responseModel.setStatus("Paid Online");
+            responseModel.setStatus("Paid");
 
             responseList.add(responseModel);
         });
