@@ -47,7 +47,7 @@ public class ParkingLotService implements IParkingLotService
     private Cache<String, String> cache;
 
     @Autowired
-    public ParkingLotService(@Lazy IUserService userService, ParkingLotRepository parkingLotRepository, LotSummaryRepository lotSummaryRepository,
+    public ParkingLotService(@Lazy IUserService userService, ParkingLotRepository parkingLotRepository, LotSummaryService lotSummaryService, LotSummaryRepository lotSummaryRepository,
                                 CarRepository carRepository) {
         this.userService = userService;
         this.lotSummaryRepository = lotSummaryRepository;
@@ -335,6 +335,7 @@ public class ParkingLotService implements IParkingLotService
             ZoneId zid = ZoneId.of("Europe/Istanbul");
             LocalDateTime lt = LocalDateTime.now(zid);
 
+            //LocalDateTime specificDate = LocalDateTime.of(2023, Month.MAY, 22, 17, 01, 15);
             LotSummaryDto lotSummaryDto = new LotSummaryDto();
             lotSummaryDto.setStartTime(lt);
             lotSummaryDto.setEndTime(null);
