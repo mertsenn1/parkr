@@ -11,7 +11,8 @@ public enum CarType
     COUPE("coupe"),
     MINIVAN("minivan"),
     STATIONWAGON("stationwagon"),
-    PICKUPTRUCK("pickuptruck");
+    PICKUPTRUCK("pickuptruck"),
+    UNKNOWN("UNKNOWN");
 
     private final String type;
     CarType(String type) {
