@@ -29,6 +29,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -284,7 +285,9 @@ public class UserService implements IUserService
             return 0;
         }
         LocalDateTime startTime = summary.getStartTime();
-        long differenceInMinutes = ChronoUnit.MINUTES.between(startTime, LocalDateTime.now()) + 1;
+        // create a clock
+        ZoneId zid = ZoneId.of("Europe/Istanbul");
+        long differenceInMinutes = ChronoUnit.MINUTES.between(startTime, LocalDateTime.now(zid)) + 1;
         long differenceInHours = differenceInMinutes / 60 + 1;
 
         JSONObject parentJSON = new JSONObject(fares);
