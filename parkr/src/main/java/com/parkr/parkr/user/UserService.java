@@ -284,7 +284,7 @@ public class UserService implements IUserService
             return 0;
         }
         LocalDateTime startTime = summary.getStartTime();
-        long differenceInMinutes = ChronoUnit.MINUTES.between(startTime, LocalDateTime.now());
+        long differenceInMinutes = ChronoUnit.MINUTES.between(startTime, LocalDateTime.now()) + 1;
         long differenceInHours = differenceInMinutes / 60 + 1;
 
         JSONObject parentJSON = new JSONObject(fares);
