@@ -127,6 +127,7 @@ public class UserService implements IUserService
             responseModel.setLastPaidTime(summary.getLastPaidTime());
             responseModel.setPaidAmount(summary.getPaidAmount());
             responseModel.setStatus(summary.getStatus());
+            responseModel.setEndTime(null);
 
             responseList.add(responseModel);
         });
@@ -151,6 +152,7 @@ public class UserService implements IUserService
             responseModel.setLastPaidTime(summary.getLastPaidTime());
             responseModel.setPaidAmount(summary.getPaidAmount());
             responseModel.setStatus(summary.getStatus());
+            responseModel.setEndTime(summary.getEndTime());
 
             responseList.add(responseModel);
         });
