@@ -17,4 +17,6 @@ public class RecentParkingLotModel {
     private String placeID;
     private LocationModel coordinates;
     private Long carID;
+    private Integer occupancy;
+    private Integer capacity;
 }

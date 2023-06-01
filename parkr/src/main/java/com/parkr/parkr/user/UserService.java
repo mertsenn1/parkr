@@ -191,6 +191,8 @@ public class UserService implements IUserService
             responseModel.setPlaceID(parkingLotDetail.getPlaceID());
             responseModel.setCoordinates(parkingLotDetail.getCoordinates());
             responseModel.setCarID(summary.getCar().getId());
+            responseModel.setOccupancy(parkingLotDetail.getOccupancy());
+            responseModel.setCapacity(parkingLotDetail.getCapacity());
 
             responseList.add(responseModel);
         });
