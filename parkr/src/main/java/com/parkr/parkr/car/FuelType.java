@@ -6,7 +6,7 @@ public enum FuelType
     GASOLINE("GASOLINE"),
     HYBRID("HYBRID"),
     ELECTRIC("ELECTRIC"),
-    UNKNOWN("UNKNOWN");;
+    UNKNOWN("UNKNOWN");
 
     private final String type;
     FuelType(String type) {

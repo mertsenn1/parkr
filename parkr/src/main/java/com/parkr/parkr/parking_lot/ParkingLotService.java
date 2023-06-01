@@ -346,6 +346,8 @@ public class ParkingLotService implements IParkingLotService
             lotSummaryDto.setFee(0);
             lotSummaryDto.setParkingLot(parkingLot.get());
             lotSummaryDto.setCar(car.get());
+            lotSummaryDto.setPaidAmount(0);
+            lotSummaryDto.setStatus("Unpaid");
 
             try {
                 lotSummaryService.saveLotSummary(lotSummaryDto);
@@ -378,6 +380,9 @@ public class ParkingLotService implements IParkingLotService
                 lotSummaryDto.setFee(0);
                 lotSummaryDto.setParkingLot(parkingLot.get());
                 lotSummaryDto.setCar(savedCar);
+                lotSummaryDto.setPaidAmount(0);
+                lotSummaryDto.setStatus("Unpaid");
+                
                 try {
                     lotSummaryService.saveLotSummary(lotSummaryDto);
                     log.info("Car with plate {} has entered to parking lot with id {}", plate, parkingLotID);
@@ -468,7 +473,9 @@ public class ParkingLotService implements IParkingLotService
             responseModel.setFee(userService.calculateCurrentFee(summary.getCar().getId()));
             responseModel.setStartTime(summary.getStartTime());
             responseModel.setCarType(summary.getCar().getCarType());
-            responseModel.setStatus("Unpaid");
+            responseModel.setStatus(summary.getStatus());
+            responseModel.setLastPaidTime(summary.getLastPaidTime());
+            responseModel.setPaidAmount(summary.getPaidAmount());
 
             responseList.add(responseModel);
         });
@@ -491,7 +498,9 @@ public class ParkingLotService implements IParkingLotService
             responseModel.setStartTime(summary.getStartTime());
             responseModel.setEndTime(summary.getEndTime());
             responseModel.setCarType(summary.getCar().getCarType());
-            responseModel.setStatus("Paid");
+            responseModel.setStatus(summary.getStatus());
+            responseModel.setLastPaidTime(summary.getLastPaidTime());
+            responseModel.setPaidAmount(summary.getPaidAmount());
 
             responseList.add(responseModel);
         });

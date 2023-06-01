@@ -9,6 +9,8 @@ import com.parkr.parkr.car.CarDto;
 import com.parkr.parkr.common.CarUpdateOperationModel;
 import com.parkr.parkr.common.ParkingInfoModel;
 import com.parkr.parkr.common.ParkingLotModel;
+import com.parkr.parkr.common.PaymentRequest;
+import com.parkr.parkr.common.PaymentResponse;
 import com.parkr.parkr.common.RecentParkingLotModel;
 
 public interface IUserService
@@ -42,4 +44,6 @@ public interface IUserService
     int calculateCurrentFee(Long carID);
 
     boolean validateToken(String token);
+
+    PaymentResponse makePayment(PaymentRequest request);
 }

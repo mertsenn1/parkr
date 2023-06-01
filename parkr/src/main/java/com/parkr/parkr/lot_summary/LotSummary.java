@@ -38,4 +38,14 @@ public class LotSummary {
 
     @Column(name = "fee")
     private Integer fee;
+
+    @Column(name = "paid_amount")
+    private Integer paidAmount;
+
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    @Column(name = "last_paid_time")
+    private LocalDateTime lastPaidTime;
+
+    @Column(name = "status")
+    private String status;
 }
