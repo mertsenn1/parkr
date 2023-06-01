@@ -30,4 +30,11 @@ public class LotSummaryDto {
     private LocalDateTime endTime;
 
     private int fee;
+
+    private Integer paidAmount;
+
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime lastPaidTime;
+
+    private String status;
 }

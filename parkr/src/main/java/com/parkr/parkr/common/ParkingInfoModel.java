@@ -18,4 +18,7 @@ public class ParkingInfoModel {
   private LocalDateTime startTime;
   private Integer fee;
   private Long carID;
+  private Integer paidAmount;
+  private LocalDateTime lastPaidTime;
+  private String status;
 }

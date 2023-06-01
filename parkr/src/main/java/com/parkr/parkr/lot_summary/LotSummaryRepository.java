@@ -32,6 +32,11 @@ public interface LotSummaryRepository extends JpaRepository<LotSummary, Long> {
     @Query(value = "update lot_summary set end_time = ?1, fee = ?2 where car_id = ?3 AND end_time is null", nativeQuery = true)
     void updateLotSummary(LocalDateTime endTime, Integer fee, Long carID);
 
+    @Transactional
+    @Modifying
+    @Query(value = "update lot_summary set last_paid_time = ?1, paid_amount = ifnull(paid_amount,0) + ?2, status = ?3 where id = ?4", nativeQuery = true)
+    void updateLotSummaryAfterPayment(LocalDateTime lastPaidTime, Integer paidAmount, String status, Long id);
+
     @Query(value = "select L.id from lot_summary L where L.car_id = ?1 AND L.parking_lot_id = ?2 AND L.end_time is null", nativeQuery = true)
     Long getExistingLotSummary(Long carID, Long parkingLotID);
 

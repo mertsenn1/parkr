@@ -4,6 +4,7 @@ import com.parkr.parkr.auth.AuthenticationRequest;
 import com.parkr.parkr.car.CarDto;
 import com.parkr.parkr.common.ApiResponse;
 import com.parkr.parkr.common.CarUpdateOperationModel;
+import com.parkr.parkr.common.PaymentRequest;
 import com.parkr.parkr.common.ValidateTokenRequest;
 import com.parkr.parkr.lot_summary.ILotSummaryService;
 
@@ -42,6 +43,12 @@ public class UserController
     @PreAuthorize("hasAuthority('USER') or hasAuthority('ADMIN')")
     public ApiResponse getPastParkingData() {
         return ApiResponse.ok(userService.getPastParkingData());
+    }
+
+    @PostMapping("/make-payment")
+    @PreAuthorize("hasAuthority('USER')")
+    public ApiResponse makePayment(@RequestBody PaymentRequest request) {
+        return ApiResponse.ok(userService.makePayment(request));
     }
 
     @GetMapping("/cars")

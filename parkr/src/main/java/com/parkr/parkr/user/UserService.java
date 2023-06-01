@@ -8,6 +8,8 @@ import com.parkr.parkr.car.ICarService;
 import com.parkr.parkr.common.CarUpdateOperationModel;
 import com.parkr.parkr.common.ParkingInfoModel;
 import com.parkr.parkr.common.ParkingLotDetailModel;
+import com.parkr.parkr.common.PaymentRequest;
+import com.parkr.parkr.common.PaymentResponse;
 import com.parkr.parkr.common.RecentParkingLotModel;
 import com.parkr.parkr.config.JwtService;
 import com.parkr.parkr.lot_summary.LotSummary;
@@ -122,6 +124,9 @@ public class UserService implements IUserService
             responseModel.setFee(calculateCurrentFee(summary.getCar().getId()));
             responseModel.setStartTime(summary.getStartTime());
             responseModel.setCarID(summary.getCar().getId());
+            responseModel.setLastPaidTime(summary.getLastPaidTime());
+            responseModel.setPaidAmount(summary.getPaidAmount());
+            responseModel.setStatus(summary.getStatus());
 
             responseList.add(responseModel);
         });
@@ -143,6 +148,9 @@ public class UserService implements IUserService
             responseModel.setFee(summary.getFee());
             responseModel.setStartTime(summary.getStartTime());
             responseModel.setCarID(summary.getCar().getId());
+            responseModel.setLastPaidTime(summary.getLastPaidTime());
+            responseModel.setPaidAmount(summary.getPaidAmount());
+            responseModel.setStatus(summary.getStatus());
 
             responseList.add(responseModel);
         });
@@ -274,6 +282,36 @@ public class UserService implements IUserService
         catch (Exception ex){
             log.info("Error occurred while deleting the user, error: {}", ex.getMessage());
         }
+    }
+
+    public PaymentResponse makePayment(PaymentRequest request) {
+        Long carID = request.getCarID();
+        // find lot_summary from car.
+        LotSummary summary = lotSummaryRepository.getCurrentLotSummaryOfCar(carID);
+        if (summary == null) {
+            return null;
+        }
+
+        int currentFee = calculateCurrentFee(carID);
+        Integer paidAmount = summary.getPaidAmount();
+        Integer amountToPay = 0;
+        if (paidAmount != null && paidAmount != 0) {
+            // pay the difference
+            amountToPay = currentFee - paidAmount;
+        }
+        else {
+            amountToPay = currentFee;
+        }
+
+        PaymentResponse response = new PaymentResponse();
+        if (amountToPay < 0) {
+            amountToPay = 0;
+        }
+        ZoneId zid = ZoneId.of("Europe/Istanbul");
+        lotSummaryRepository.updateLotSummaryAfterPayment(LocalDateTime.now(zid), amountToPay, "Paid Online", summary.getId());
+
+        response.setPaidAmount(amountToPay);
+        return response;
     }
 
     @Override

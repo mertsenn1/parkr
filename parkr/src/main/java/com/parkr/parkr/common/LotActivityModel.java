@@ -21,4 +21,6 @@ public class LotActivityModel {
   private Integer fee;
   private CarType carType;
   private String status;
+  private LocalDateTime lastPaidTime;
+  private Integer paidAmount;
 }
